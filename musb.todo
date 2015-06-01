@@ -1,0 +1,121 @@
+MUSB:
+    **WARNING**: Internal use.
+
+    Release 1:
+    Task list for **Release 1**  @created(15-05-05 22:23)
+        MIPS core:
+            Nothing to be done.
+        SoC:
+            Nothing to be done.
+        Tesbenchs:
+            Nothing to be done.
+        Software and library:
+            Nothing to be done.
+        Documentation:
+            Nothing to be done.
+
+--- ✄ -----------------------
+    Release 1.1:
+    Tast list for **Release 1.1** @created(15-05-21 23:14)
+        MIPS core:
+            [ ] Optimization (reduce area).
+        SoC:
+            [ ] GPIO: separar el manejo del puerto del manejo de los pines. Crear un IO_cell (tomado de **OpenMSP430**).
+                For easy simulation.
+            [ ] UART/FIFO/RAM: Use async ram (distibuted). Check performance (up to 256 bytes buffer. Maybe 128).
+        Synthesys:
+            [ ] Populate UCF file: use all pins and set unused to GND (using iobuf).
+        Tesbenchs:
+            [ ] Update make help.
+            [ ] Basic wave settings.
+            [ ] Check if the test is OK.
+            [ ] Make C tests. Buscar forma de probar que el test ejecutó en forma correcta.
+        Software and library:
+            [ ] Make library.
+        Utils:
+            [ ] Make loader: python + Tk
+        Documentation:
+            [ ] Update READMEs.
+            [ ] Update manual.
+
+--- ✄ -----------------------
+    Release 2:
+    Task list for **Release 2** @created(15-05-11 21:34)
+        MIPS core:
+            [ ] Wishbone bus.
+            [ ] User space vs Kernel space. (Address translation).
+        SoC:
+            [ ] Wishbone bus.
+            [ ] Define external memories.
+                Search for simulation models.
+            [ ] External memory controller for the Spartan 3 (Digilent). @low
+                SRAM controller.
+            [ ] External memory controller for the Spartan 6 (XuLA 2). @low
+                SDRAM controller.
+            [ ] Flash controller. @low
+        Tesbenchs:
+            [ ] Implement a debug monitor (Hardware).
+            [ ] Verilog VPI: GDB + Icarus Verilog.
+                Check **OpenRISC**
+        Software and library:
+            Nothing to be done.
+        Documentation:
+            [ ] Update READMEs.
+            [ ] Update manual.
+            [ ] Write wiki (export manual).
+＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+Archive:
+ [x] Create board for the Spartan 3E board. @done (15-05-31 18:25) @project(Release 1.1 / SoC)
+  Depends previous task.
+ [x] Update testbench. @done (15-05-31 18:25) @project(Release 1.1 / Tesbenchs)
+ [x] New IDE: Eclipse plugin?. Intellij based IDE? Intellij Plugin? Makefile FTW? @done (15-05-29 13:51) @project(Release 2 / Software and library)
+ [x] Implement a debug monitor (testbench). @done (15-05-29 13:51) @project(Release 2 / Tesbenchs)
+  Check **OpenMSP430** y el **OpenRISC**.
+ [x] Create makefile (Generic. Reuse/Copy to each board folder). @done (15-05-28 10:43) @project(Release 1.1 / Synthesys)
+ [x] Parámetros de simulación por consola (MAX_SIMULATION_TIME, por ejemplo): Verilog. @done (15-05-27 16:42) @project(Release 1.1 / Tesbenchs)
+  Check **OpenRISC**
+ [x] Separate the reference model from the SoC implementation. Separate for each different board, do not share code. @done (15-05-26 20:22) @project(Release 1.1 / SoC)
+  Folder for the XuLA 2, Spartan 3 & Spartan 3E boards. Different clock generators (the only thing that is board dependent). Check ORPSoC implementation (reference).
+ [x] Write software utils in C, python or Tcl. @done (15-05-26 20:21) @project(Release 1.1 / Utils)
+ [-] Implementar scripts en python para automatización del sistema de simulación (alternativa a los makefiles/Tcl). @cancelled (15-05-26 20:21) @project(Release 1.1 / Tesbenchs)
+  Check **OpenMSP430** (Tcl scripts).
+ [x] Remove the MIPS IDE. @done (15-05-26 20:20) @project(Release 1.1 / Software and library)
+ [-] Move **asm** tests to the Software folder. @cancelled (15-05-26 20:20) @project(Release 1.1 / Software and library)
+ [-] La definición de periféricos debe ser configurable según punto anterior. @cancelled (15-05-21 23:10) @project(Release 2 (o simplemente post 1) / Software and library)
+  System configuration? Handle with scripts? automatization? Wizard?
+ [-] Implementar opción en el IDE para realizar la configuración de la "librería" según el diseño del SoC (es decir, implementar una ventana para la configuración de los periféricos mapeados a memoria). @cancelled (15-05-21 23:10) @project(Release 2 (o simplemente post 1) / Software and library)
+  Include in the makefile the toolchain's include path?
+ [x] Write manual. @done (15-05-21 23:08) @project(MUSB / Release 1 / Documentation)
+ [x] Internal documentation. @done (15-05-20 09:00) @project(MUSB / Release 1 / Documentation)
+  Describe each module inside the manual.
+ [x] User manual index. @done (15-05-14 22:20) @project(MUSB / Release 1 / Documentation)
+ [x] Connexion diagram. @done (15-05-13 09:11) @project(MUSB / Release 1 / Documentation)
+  Pipeline.
+ [x] Check testbench. @done (15-05-12 00:06) @project(MUSB / Tesbenchs)
+  Improve structure
+ [-] Las direcciones de los perifericos, y las máscaras deben ser habilitadas para configurar desde el tope (evitar tener que reconfigurar el SoC internamente, salvo que sea necesario modificar las conexiones). @cancelled (15-05-11 21:33)
+ [-] Averiguar posibilidad de realizar la simulación en **Icarus Verilog** usando una interfaz gráfica a la que se pueda cambiar los pasos (continue, pause, step). @cancelled (15-05-11 21:33)
+ [x] Wiki en markdown. Submodulo del repo principal. Castellano? Inglés? @done (15-05-10 13:51)
+ [x] Manual en texinfo. Crear makefile (template). Castellano? Inglés? Ambos? @done (15-05-10 13:51)
+ [x] Verificar funcionamiento de las instrucciones MOVN y MOVZ. @done (15-05-09 23:19)
+ [x] Verificar funcionamiento de las instrucciones CLO y CLZ. @done (15-05-09 23:19)
+ [x] Documentar en **Markdown**, **texinfo**? Si es en markdown, exportar a la wiki de github?. -> Actualizar instrucciones en los **README.md**. @done (15-05-09 23:19)
+ [x] Check: IFID mantiene el valor del PC en caso de un salto (BSD). No debería, ya que con saber que el error es en el BDS, en el código de excepćión debería hacer PC - 4 para compensar el problema. @done (15-05-09 23:19)
+ [x] Logo del proyecto. @done (15-05-09 17:18)
+ [x] verificar funcionamiento de las instrucciones LL & SC. **Bug** @critical @done (15-05-09 15:11)
+ [x] Bug: stall para saltos incondicionales. Esto no debe ser. WTF was this? @critical @done (15-05-08 00:22)
+ [x] Bug: en caso de bus error, y stall en el pipeline, (IF error), el error se pierde. @critical @done (15-05-08 00:21)
+ [x] Bug: salto dependiente de un valor de memoria. El hazard unit tiene error en la determinación. @done (15-05-07 23:22)
+ [-] Arbiter/Mux: implementar versión con registros? (1-clock delay). Ambos? Arbiter? Mux? @cancelled (15-05-07 13:36)
+ [x] Eliminar el aliasing de dirección en los perifericos. Implementar con la mascara de verificación. Posibles problemas: zonas de memoria no implementadas que aún generen aliasing. @done (15-05-07 13:35)
+ [x] Revisar la implementación del **watchdog**. Funciona. El problema de aliasing no afecta al watchdog, pues esto debe ser corrgido usando las mascaras de verificación de direcciones. @done (15-05-07 10:36)
+ [x] Revisar implementación del bus error. @done (15-05-07 00:35)
+ [x] Error al accesar zona de memoria no mapeada: re-escribe memoria @critical @done (15-05-07 00:35)
+ [x] Revisar nomenclatura de nombres. @high @done (15-05-06 21:58)
+ [x] Verificación del generador de reset. @done (15-05-06 21:43)
+ [x] Remove old bus (arbiter + crossbar) @done (15-05-06 20:59)
+ [x] Estudiar la posibilidad de renombrar el SoC: MUSBSoC vs MUSoC. @done (15-05-06 20:51)
+ [x] Revisar los parámetros utilizados para la configuración del core. @done (15-05-06 16:00)
+ [x] Revisar documentación de cada módulo. @done (15-05-06 15:39)
+ [x] Implementar nomenclatura de nombres. @high @done (15-05-06 15:37)
+ [x] Crear esqueleto de documentación. @done (15-05-06 00:13)
