@@ -55,7 +55,7 @@ fi
 #-------------------------------------------------------------------------------
 rm -rf ${BUILD_FOLDER}/*
 mkdir -p ${BUILD_FOLDER}
-cp ${TEMPLATES_FOLDER}/Makefile_template ${BUILD_FOLDER}/makefile
+cp ${TEMPLATES_FOLDER}/makefile_template ${BUILD_FOLDER}/makefile
 cp ${TEMPLATES_FOLDER}/linker_template ${BUILD_FOLDER}/linker.ls
 cp ${asm} ${BUILD_FOLDER}/$1.s
 
