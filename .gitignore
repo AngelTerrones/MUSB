@@ -28,3 +28,5 @@ out/
 *.t2d
 *.pro.user*
 *Makefile*
+bin2hex
+bin2mem
