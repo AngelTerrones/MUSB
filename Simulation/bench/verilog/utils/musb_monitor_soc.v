@@ -1,7 +1,7 @@
 //==================================================================================================
-//  Filename      : musb_monitor.v
+//  Filename      : musb_monitor_soc.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-05-31 21:44:31
+//  Last Modified : 2015-06-02 12:43:24
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -18,9 +18,7 @@
 `define TRACE_BUFFER_SIZE   10000
 `define TIMEOUT_DEFAULT     30000
 
-module musb_monitor#(
-    parameter CORE = ""
-    )(
+module musb_monitor_soc(
     input               halt,
     input               if_stall,
     input               if_flush,
@@ -88,34 +86,18 @@ module musb_monitor#(
         input    [4:0]     cp0_addr;
         output   [31:0]    cp0_data;
         begin
-            if (CORE == "core") begin
-                case (cp0_addr)
-                    5'd8   : cp0_data = core.musb_cpzero0.BadVAddr;
-                    5'd9   : cp0_data = core.musb_cpzero0.Count;
-                    5'd11  : cp0_data = core.musb_cpzero0.Compare;
-                    5'd12  : cp0_data = core.musb_cpzero0.Status;
-                    5'd13  : cp0_data = core.musb_cpzero0.Cause;
-                    5'd14  : cp0_data = core.musb_cpzero0.EPC;
-                    5'd15  : cp0_data = core.musb_cpzero0.PRId;
-                    5'd16  : cp0_data = core.musb_cpzero0.Config1;
-                    5'd30  : cp0_data = core.musb_cpzero0.ErrorEPC;
-                    default: cp0_data = 32'h0000_0000;
-                endcase
-            end
-            else begin
-                case (cp0_addr)
-                    5'd8   : cp0_data = soc.musb_core0.musb_cpzero0.BadVAddr;
-                    5'd9   : cp0_data = soc.musb_core0.musb_cpzero0.Count;
-                    5'd11  : cp0_data = soc.musb_core0.musb_cpzero0.Compare;
-                    5'd12  : cp0_data = soc.musb_core0.musb_cpzero0.Status;
-                    5'd13  : cp0_data = soc.musb_core0.musb_cpzero0.Cause;
-                    5'd14  : cp0_data = soc.musb_core0.musb_cpzero0.EPC;
-                    5'd15  : cp0_data = soc.musb_core0.musb_cpzero0.PRId;
-                    5'd16  : cp0_data = soc.musb_core0.musb_cpzero0.Config1;
-                    5'd30  : cp0_data = soc.musb_core0.musb_cpzero0.ErrorEPC;
-                    default: cp0_data = 32'h0000_0000;
-                endcase
-            end
+            case (cp0_addr)
+                5'd8   : cp0_data = soc.musb_core0.musb_cpzero0.BadVAddr;
+                5'd9   : cp0_data = soc.musb_core0.musb_cpzero0.Count;
+                5'd11  : cp0_data = soc.musb_core0.musb_cpzero0.Compare;
+                5'd12  : cp0_data = soc.musb_core0.musb_cpzero0.Status;
+                5'd13  : cp0_data = soc.musb_core0.musb_cpzero0.Cause;
+                5'd14  : cp0_data = soc.musb_core0.musb_cpzero0.EPC;
+                5'd15  : cp0_data = soc.musb_core0.musb_cpzero0.PRId;
+                5'd16  : cp0_data = soc.musb_core0.musb_cpzero0.Config1;
+                5'd30  : cp0_data = soc.musb_core0.musb_cpzero0.ErrorEPC;
+                default: cp0_data = 32'h0000_0000;
+            endcase
         end
     endtask
 
@@ -150,12 +132,7 @@ module musb_monitor#(
         begin
             $display("INFO-MONITOR:\tRegister file dump:\n");
             for(index = 1; index < 32; index = index + 1) begin
-                if (CORE == "core") begin
-                    $display("\tR[%02d] = 0x%8h ( %d )", index, core.GPR.registers[index], core.GPR.registers[index]);
-                end
-                else begin
-                    $display("\tR[%02d] = 0x%8h ( %d )", index, soc.musb_core0.GPR.registers[index],soc.musb_core0.GPR.registers[index]);
-                end
+                $display("\tR[%02d] = 0x%8h ( %d )", index, soc.musb_core0.GPR.registers[index],soc.musb_core0.GPR.registers[index]);
             end
             $display("\nINFO-MONITOR:\tEnd register file dump.\n");
         end
@@ -165,12 +142,7 @@ module musb_monitor#(
     // Dump the memory
     task dump_memory;
         begin
-            if (CORE == "core") begin
-                $writememh("core_dump.txt", memory0.mem);
-            end
-            else begin
-                $writememh("core_dump.txt", soc.memory0.mem);
-            end
+            $writememh("core_dump.txt", soc.memory0.mem);
             $display("INFO-MONITOR:\tMemory file dump: DONE.");
         end
     endtask
@@ -663,25 +635,14 @@ module musb_monitor#(
             $display("INFO-MONITOR:\tDump of variables: DISABLED.");
         `else
             $display("INFO-MONITOR:\tDump of variables: ENABLED.");
-            $dumpfile("tb_core.vcd");
-            if(CORE=="core") begin
-                $dumpvars(0, tb_core);      // check this
-            end
-            else begin
-                $dumpvars(0, tb_soc);      // check this
-            end
+            $dumpfile("tb_soc.vcd");
+            $dumpvars(0, tb_soc);      // check this
         `endif
 
         // Reset
         $display("INFO-MONITOR:\tReset assertion (Time: %0d ns).", $time);
-        if(CORE=="core") begin
-            #(5*`cycle - 5)
-            rst <= 0;
-        end
-        else begin
-            #(2000*`cycle - 5)
-            rst <= 0;
-        end
+        #(2000*`cycle - 5)
+        rst <= 0;
         $display("INFO-MONITOR:\tReset deassertion (Time: %0d ns).", $time);
 
         // wait until end

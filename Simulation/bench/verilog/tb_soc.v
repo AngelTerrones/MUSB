@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : tb_soc.v
 //  Created On    : 2015-05-31 20:25:47
-//  Last Modified : 2015-05-31 20:50:46
+//  Last Modified : 2015-06-02 12:42:01
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -60,10 +60,7 @@ module tb_soc;
     //--------------------------------------------------------------------------
     // Monitor
     //--------------------------------------------------------------------------
-    musb_monitor #(
-        .CORE("SoC")
-        )
-        monitor0(
+    musb_monitor_soc monitor0(
         .halt                ( halted                                          ),
         .if_stall            ( soc.musb_core0.if_stall                         ),
         .if_flush            ( soc.musb_core0.if_exception_flush               ),

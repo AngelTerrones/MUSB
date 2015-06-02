@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : tb_core.v
 //  Created On    : 2014-10-02 18:20:53
-//  Last Modified : 2015-05-31 21:26:13
+//  Last Modified : 2015-06-02 12:41:47
 //  Revision      : 0.1
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -105,10 +105,7 @@ module tb_core;
     //--------------------------------------------------------------------------
     // Monitor
     //--------------------------------------------------------------------------
-    musb_monitor #(
-        .CORE("core")
-        )
-        monitor0(
+    musb_monitor_core monitor0(
         .halt                ( halted                                ),
         .if_stall            ( core.if_stall                         ),
         .if_flush            ( core.if_exception_flush               ),
