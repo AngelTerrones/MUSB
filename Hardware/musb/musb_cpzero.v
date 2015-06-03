@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_cpzero.v
 //  Created On    : 2015-02-23 20:51:58
-//  Last Modified : 2015-05-31 21:01:38
+//  Last Modified : 2015-06-03 13:20:45
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -215,7 +215,7 @@ module musb_cpzero(
                                      exc_dbus_error | exc_trap;                                                         //
 
     assign kernel_mode             = (Status_KSU != 2'b10) | Status_EXL | Status_ERL;                                   // Kernel mode if mode != user, Exception level or Error level. To inhibit new exceptions/interrupts
-    assign interrupt_5             = (Count == Compare);                                                                // Counter interrupt (#5)
+    assign interrupt_5             = (Count == Compare) & Status_IM[7];                                                 // Counter interrupt (#5)
     assign interrupt_enabled       = exc_nmi | ( Status_IE & ( (Cause_IP[7:0] & Status_IM[7:0]) != 8'b0 ) );            // Interrupt  if NMI, Interrupts are enabled (global) and the individual interrupt is enable.
     assign exception_interrupt     = interrupt_enabled & ~Status_EXL & ~Status_ERL & ~id_is_flushed;                    // Interrupt is OK to process if: no exception level and no error level.
     assign cp0_enable_write        = mtc0 & ~id_stall & (Status_CU_0 | kernel_mode) &
@@ -358,7 +358,7 @@ module musb_cpzero(
                [6:2] are set and cleared by external hardware.
                [1:0] are set and cleared by software.
              */
-            Cause_IP[7]   <= ((Status_CU_0 | kernel_mode) & mfc0 & (register_address == 5'd9) & (select == 3'b000)) ? 1'b0 : ((Cause_IP[7] == 0) ? interrupt_5 : Cause_IP[7]);    // If reading -> 0, Otherwise if 0 -> interrupt_5.
+            Cause_IP[7]   <= (cp0_enable_write & (register_address == 5'd11) & (select == 3'b000)) ? 1'b0 : ((Cause_IP[7] == 0) ? interrupt_5 : Cause_IP[7]);    // If reading -> 0, Otherwise if 0 -> interrupt_5.
             Cause_IP[6:2] <= interrupts[4:0];
             Cause_IP[1:0] <= (cp0_enable_write & (register_address == 5'd13) & (select == 3'b000)) ? data_input[9:8] : Cause_IP[1:0];
         end
