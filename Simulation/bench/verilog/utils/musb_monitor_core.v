@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_monitor_core.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-02 12:39:20
+//  Last Modified : 2015-06-02 20:26:00
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -14,9 +14,10 @@
 
 `timescale 1ns / 100ps
 
-`define cycle               20
-`define TRACE_BUFFER_SIZE   10000
-`define TIMEOUT_DEFAULT     30000
+`define cycle                   20
+`define TRACE_BUFFER_SIZE       10000
+`define EXCEPTION_BUFFER_SIZE   10000
+`define TIMEOUT_DEFAULT         30000
 
 module musb_monitor_core(
     input               halt,
@@ -52,6 +53,7 @@ module musb_monitor_core(
     // registers
     //--------------------------------------------------------------------------
     reg  [256*8-1:0] trace_buffer[0:`TRACE_BUFFER_SIZE];
+    reg  [256*8-1:0] exception_buffer[0:`EXCEPTION_BUFFER_SIZE];
     reg  [31:0]      wb_exception_pc;
     reg  [31:0]      ex_instruction;
     reg  [31:0]      mem_instruction;
@@ -75,6 +77,7 @@ module musb_monitor_core(
     // counters
     //--------------------------------------------------------------------------
     integer trace_fill_counter;
+    integer exception_buffer_counter;
 
     //--------------------------------------------------------------------------
     // Tasks
@@ -104,22 +107,23 @@ module musb_monitor_core(
     //--------------------------------------------------------------------------
     // Decode the exception cause
     task decode_cause;
-        input   [31:0]  cause;
+        input   [31:0]      cause;
+        output  [20*8-1:0]  exception_code;
         begin
             case (cause[6:2])
-                5'h4    : $sformat(cause_string, "EXC_AdEL");
-                5'h5    : $sformat(cause_string, "EXC_AdES");
-                5'h7    : $sformat(cause_string, "EXC_DBE");
-                5'hd    : $sformat(cause_string, "EXC_Tr");
-                5'hc    : $sformat(cause_string, "EXC_Ov");
-                5'h8    : $sformat(cause_string, "EXC_Sys");
-                5'h9    : $sformat(cause_string, "EXC_Bp");
-                5'ha    : $sformat(cause_string, "EXC_RI");
-                5'hb    : $sformat(cause_string, "EXC_CpU");
-                5'h4    : $sformat(cause_string, "EXC_AdIF");
-                5'h6    : $sformat(cause_string, "EXC_IBE");
-                5'h0    : $sformat(cause_string, "EXC_Int");
-                default : $sformat(cause_string, "UNKNOWN CAUSE");
+                5'h4    : $sformat(exception_code, "EXC_AdEL");
+                5'h5    : $sformat(exception_code, "EXC_AdES");
+                5'h7    : $sformat(exception_code, "EXC_DBE");
+                5'hd    : $sformat(exception_code, "EXC_Tr");
+                5'hc    : $sformat(exception_code, "EXC_Ov");
+                5'h8    : $sformat(exception_code, "EXC_Sys");
+                5'h9    : $sformat(exception_code, "EXC_Bp");
+                5'ha    : $sformat(exception_code, "EXC_RI");
+                5'hb    : $sformat(exception_code, "EXC_CpU");
+                5'h4    : $sformat(exception_code, "EXC_AdIF");
+                5'h6    : $sformat(exception_code, "EXC_IBE");
+                5'h0    : $sformat(exception_code, "EXC_Int");
+                default : $sformat(exception_code, "UNKNOWN CAUSE");
             endcase
         end
     endtask
@@ -499,11 +503,43 @@ module musb_monitor_core(
     endtask
 
     //--------------------------------------------------------------------------
+    // Decode exception and store in a buffer
+    task decode_exception;
+        reg [64*8-1:0]  exception_string;
+        reg [31:0]       cause_reg;
+        reg [20*8-1:0]   cause_string;
+        begin
+            exception_string = 0;
+            cause_string     = 0;
+
+            if(if_exception_ready | id_exception_ready | ex_exception_ready | mem_exception_ready) begin
+                #1
+                get_cp0_reg(13, cause_reg);
+                decode_cause(cause_reg, cause_string);
+                $sformat(exception_string, "INFO-MONITOR:\tException. Cause: %-0s. Time: %0d ns", cause_string, $time - 1);
+                exception_buffer[exception_buffer_counter] = exception_string;
+                exception_buffer_counter = exception_buffer_counter + 1;
+            end
+        end
+    endtask
+
+    //--------------------------------------------------------------------------
     // print stats
     task print_stats;
         integer index;
         begin
             $display();
+            $display("INFO-MONITOR:\tHalt signal assertion (Time: %0d ns).", $time - 1);
+
+            if(exception_buffer_counter != 0) begin
+                $display("INFO-MONITOR:\tPrinting exceptions:");
+                $display("");
+                for(index = 0; index < exception_buffer_counter; index = index + 1) begin
+                    $display("%-0s", exception_buffer[index]);
+                end
+                $display("");
+            end
+
             $display("INFO-MONITOR:\tHalt signal assertion (Time: %0d ns).", $time - 1);
             $display("INFO-MONITOR:\tPrinting program trace, performing the memory dump, and the register dump.\n");
             //$display("-----------------------------------------------------------------------------------------------------------------------------");
@@ -527,11 +563,11 @@ module musb_monitor_core(
     // Initial
     //--------------------------------------------------------------------------
     initial begin
-        trace_fill_counter = 0;
-        cause_reg          <= 0;
-        clk_core           <= 1;
-        clk_bus            <= 1;
-        rst                <= 1;
+        trace_fill_counter       <= 0;
+        exception_buffer_counter <= 0;
+        clk_core                 <= 1;
+        clk_bus                  <= 1;
+        rst                      <= 1;
     end
 
     //--------------------------------------------------------------------------
@@ -566,34 +602,7 @@ module musb_monitor_core(
     // Log exceptions
     //--------------------------------------------------------------------------
     always @(posedge clk_core) begin
-        if(if_exception_ready) begin
-            $write("INFO-MONITOR:\tIF exception. ");
-            #1
-            get_cp0_reg(13, cause_reg);
-            decode_cause(cause_reg);
-            $write("Cause: %-0s. Time: %0d ns\n", cause_string, $time - 1);
-        end
-        else if(id_exception_ready) begin
-            #1
-            $write("INFO-MONITOR:\tID exception. ");
-            get_cp0_reg(13, cause_reg);
-            decode_cause(cause_reg);
-            $write("Cause: %-0s. Time: %0d ns\n", cause_string, $time - 1);
-        end
-        else if(ex_exception_ready) begin
-            $write("INFO-MONITOR:\tEX exception. ");
-            #1
-            get_cp0_reg(13, cause_reg);
-            decode_cause(cause_reg);
-            $write("Cause: %-0s. Time: %0d ns\n", cause_string, $time - 1);
-        end
-        else if(mem_exception_ready) begin
-            $write("INFO-MONITOR:\tMEM exception. ");
-            #1
-            get_cp0_reg(13, cause_reg);
-            decode_cause(cause_reg);
-            $write("Cause: %-0s. Time: %0d ns\n", cause_string, $time - 1);
-        end
+        decode_exception();
     end
 
     //--------------------------------------------------------------------------
