@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : tb_soc.v
 //  Created On    : 2015-05-31 20:25:47
-//  Last Modified : 2015-06-02 12:42:01
+//  Last Modified : 2015-06-02 14:27:25
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -82,6 +82,9 @@ module tb_soc;
         .id_exception_ready  ( soc.musb_core0.musb_cpzero0.id_exception_ready  ),
         .ex_exception_ready  ( soc.musb_core0.musb_cpzero0.ex_exception_ready  ),
         .mem_exception_ready ( soc.musb_core0.musb_cpzero0.mem_exception_ready ),
+        .bootloader_rst      ( soc.bootloader_reset_core                       ),
+        .monitor_rx          ( uart_tx                                         ),
+        .monitor_tx          ( uart_rx                                         ),
         .clk_core            ( clk_core                                        ),
         .clk_bus             ( clk_bus                                         ),
         .rst                 ( rst                                             )
