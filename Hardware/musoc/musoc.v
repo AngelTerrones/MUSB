@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musoc.v
 //  Created On    : 2015-01-10 21:18:59
-//  Last Modified : 2015-05-31 21:23:11
+//  Last Modified : 2015-06-03 10:02:39
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -30,7 +30,9 @@ module musoc#(
     input           rst,
     output          halted,
     // GPIO
-    inout   [31:0]  gpio_a_inout,
+    input   [31:0]  gpio_i,
+    output  [31:0]  gpio_o,
+    output  [31:0]  gpio_oe,
     // UART
     input           uart_rx,
     output          uart_tx
@@ -221,13 +223,15 @@ module musoc#(
     // I/O
     //--------------------------------------------------------------------------
     gpio gpio0(/*autoinst*/
-        .gpio_inout     ( gpio_a_inout[31:0]  ),
+        .gpio_o         ( gpio_o              ),
+        .gpio_oe        ( gpio_oe             ),
         .gpio_data_o    ( slave1_data_i[31:0] ),
         .gpio_ready     ( slave1_ready        ),
         .gpio_interrupt ( gpio_interrupt[3:0] ),
         .clk            ( clk_bus             ),
         .rst            ( rst_module          ),
-        .gpio_address   ( slave_address[4:0]  ),
+        .gpio_i         ( gpio_i              ),
+        .gpio_address   ( slave_address[31:0] ),
         .gpio_data_i    ( slave_data_o[31:0]  ),
         .gpio_wr        ( slave_wr[3:0]       ),
         .gpio_enable    ( slave1_enable       )

@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : tb_soc.v
 //  Created On    : 2015-05-31 20:25:47
-//  Last Modified : 2015-06-02 14:27:25
+//  Last Modified : 2015-06-03 12:59:18
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -27,7 +27,9 @@ module tb_soc;
     wire            clk_bus;
     wire            rst;
     wire            halted;
-    wire    [31:0]  gpio_a_inout;
+    wire    [31:0]  gpio_i;
+    wire    [31:0]  gpio_o;
+    wire    [31:0]  gpio_oe;
     wire            uart_tx;
     wire            uart_rx;
 
@@ -52,7 +54,9 @@ module tb_soc;
             .clk          ( clk_bus            ),
             .rst          ( rst                ),
             .halted       ( halted             ),
-            .gpio_a_inout ( gpio_a_inout[31:0] ),
+            .gpio_i       ( gpio_i             ),
+            .gpio_o       ( gpio_o             ),
+            .gpio_oe      ( gpio_oe            ),
             .uart_rx      ( uart_rx            ),
             .uart_tx      ( uart_tx            )
             );
@@ -85,6 +89,8 @@ module tb_soc;
         .bootloader_rst      ( soc.bootloader_reset_core                       ),
         .monitor_rx          ( uart_tx                                         ),
         .monitor_tx          ( uart_rx                                         ),
+        .monitor_gpio_i      ( gpio_o                                          ),
+        .monitor_gpio_o      ( gpio_i                                          ),
         .clk_core            ( clk_core                                        ),
         .clk_bus             ( clk_bus                                         ),
         .rst                 ( rst                                             )

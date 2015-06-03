@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_monitor_soc.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-02 20:23:57
+//  Last Modified : 2015-06-03 14:50:23
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -15,8 +15,8 @@
 `timescale 1ns / 100ps
 
 `define cycle                   20
-`define TRACE_BUFFER_SIZE       10000
-`define EXCEPTION_BUFFER_SIZE   10000
+`define TRACE_BUFFER_SIZE       1000000
+`define EXCEPTION_BUFFER_SIZE   1000000
 `define TIMEOUT_DEFAULT         30000
 
 module musb_monitor_soc(
@@ -42,10 +42,13 @@ module musb_monitor_soc(
     input               id_exception_ready,
     input               ex_exception_ready,
     input               mem_exception_ready,
-    // soc
+    // soc UART
     input               bootloader_rst,
     input               monitor_rx,
     output              monitor_tx,
+    // soc GPIO
+    input       [31:0]  monitor_gpio_i,
+    output  reg [31:0]  monitor_gpio_o,
     // system
     output  reg         clk_core,
     output  reg         clk_bus,
@@ -623,14 +626,30 @@ module musb_monitor_soc(
         wb_mem_address    <= (rst) ? 32'b0 : ((wb_stall) ? wb_mem_address    : mem_address);
         wb_mem_store_data <= (rst) ? 32'b0 : ((wb_stall) ? wb_mem_store_data : mem_data);
 
-        id_instruction_stalled  <= (rst) ? 1'b0 : ((ex_stall)  ? ex_instruction_stalled  : if_stall);
-        id_instruction_flushed  <= (rst) ? 1'b0 : ((ex_stall)  ? ex_instruction_flushed  : if_flush);
+        id_instruction_stalled  <= (rst) ? 1'b0 : ((id_stall)  ? id_instruction_stalled  : if_stall);
+        id_instruction_flushed  <= (rst) ? 1'b0 : ((id_stall)  ? id_instruction_flushed  : if_flush);
         ex_instruction_stalled  <= (rst) ? 1'b0 : ((ex_stall)  ? ex_instruction_stalled  : id_instruction_stalled  | id_stall);
         ex_instruction_flushed  <= (rst) ? 1'b0 : ((ex_stall)  ? ex_instruction_flushed  : id_instruction_flushed  | id_flush);
         mem_instruction_stalled <= (rst) ? 1'b0 : ((mem_stall) ? mem_instruction_stalled : ex_instruction_stalled  | ex_stall);
         mem_instruction_flushed <= (rst) ? 1'b0 : ((mem_stall) ? mem_instruction_flushed : ex_instruction_flushed  | ex_flush);
         wb_instruction_stalled  <= (rst) ? 1'b0 : ((wb_stall)  ? wb_instruction_stalled  : mem_instruction_stalled | mem_stall);
         wb_instruction_flushed  <= (rst) ? 1'b0 : ((wb_stall)  ? wb_instruction_flushed  : mem_instruction_flushed | mem_flush);
+    end
+
+    //--------------------------------------------------------------------------
+    // GPIO out
+    // Port A (gpio[7:0]  ) : input
+    // Port B (gpio[15:8] ) : input
+    // Port C (gpio[23:16]) : ouput
+    // Port D (gpio[31:24]) : ouput
+    //--------------------------------------------------------------------------
+    always @(negedge clk_core) begin
+        if (rst) begin
+            monitor_gpio_o <= 32'b0;
+        end
+        else begin
+            monitor_gpio_o <= {16'b0, monitor_gpio_i[31:16]};
+        end
     end
 
     //--------------------------------------------------------------------------
