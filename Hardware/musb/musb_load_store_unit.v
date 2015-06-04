@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_load_store_unit.v
 //  Created On    : 2014-09-29 20:35:18
-//  Last Modified : 2015-05-31 22:55:18
+//  Last Modified : 2015-06-04 10:12:55
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -186,14 +186,14 @@
                 2'b01   : dmem_data_o <= (dmem_sign_extend) ? { {24{dport_data_i[15]} }, dport_data_i[15:8] }  : {24'b0, dport_data_i[15:8]};
                 2'b10   : dmem_data_o <= (dmem_sign_extend) ? { {24{dport_data_i[23]} }, dport_data_i[23:16] } : {24'b0, dport_data_i[23:16]};
                 2'b11   : dmem_data_o <= (dmem_sign_extend) ? { {24{dport_data_i[31]} }, dport_data_i[31:24] } : {24'b0, dport_data_i[31:24]};
-                default : dmem_data_o <= 32'hDEAD_B173;
+                default : dmem_data_o <= 32'hx;
             endcase
         end
         else if (dmem_halfword) begin
             case (dmem_address[1])
                 1'b0    : dmem_data_o <= (dmem_sign_extend) ? { {16{dport_data_i[15]} }, dport_data_i[15:0] }   : {16'b0, dport_data_i[15:0]};
                 1'b1    : dmem_data_o <= (dmem_sign_extend) ? { {16{dport_data_i[31]} }, dport_data_i[31:16] }  : {16'b0, dport_data_i[31:16]};
-                default : dmem_data_o <= 32'hDEAD_4A1F;
+                default : dmem_data_o <= 32'hx;
             endcase
         end
         else if (mem_llsc & dmem_write) begin

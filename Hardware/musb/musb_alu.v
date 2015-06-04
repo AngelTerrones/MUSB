@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_alu.v
 //  Created On    : 2014-09-23 20:09:00
-//  Last Modified : 2015-05-24 21:00:31
+//  Last Modified : 2015-06-04 11:50:56
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -206,7 +206,7 @@ module musb_alu#(
             //--------------------------------------------------------------------------
             // Count Leading Ones
             //--------------------------------------------------------------------------
-            always @(A) begin
+            always @(*) begin
                 casex (A)
                     32'b0xxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx : clo_result <= 6'd0;
                     32'b10xx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx : clo_result <= 6'd1;
@@ -248,7 +248,7 @@ module musb_alu#(
             //--------------------------------------------------------------------------
             // Count Leading Zeros
             //--------------------------------------------------------------------------
-            always @(A) begin
+            always @(*) begin
                 casex (A)
                     32'b1xxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx : clz_result <= 6'd0;
                     32'b01xx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx : clz_result <= 6'd1;
@@ -289,9 +289,9 @@ module musb_alu#(
         end
         // Disable
         else begin
-            always @(A) begin
-                clo_result <= 6'd0;
-                clz_result <= 6'b0;
+            always begin
+                clo_result <= 6'dx;
+                clz_result <= 6'bx;
             end
         end
     endgenerate
@@ -330,7 +330,7 @@ module musb_alu#(
         end
         //  No hardware multiplier
         else begin
-            assign multx_result = 64'b0;    // disabled
+            assign multx_result = 64'h0;    // disabled
             assign mult_active  = 1'b0;     // disabled
             assign mult_ready   = 1'b0;     // disabled
         end
@@ -356,8 +356,8 @@ module musb_alu#(
         end
         // No hardware divider
         else begin
-            assign quotient  = 32'b0;   // disabled
-            assign remainder = 32'b0;   // disabled
+            assign quotient  = 32'h0;   // disabled
+            assign remainder = 32'h0;   // disabled
             assign div_stall = 1'b0;    // disabled
         end
     endgenerate

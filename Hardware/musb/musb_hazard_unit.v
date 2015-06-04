@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_hazard_unit.v
 //  Created On    : 2014-09-26 20:26:08
-//  Last Modified : 2015-05-31 22:58:43
+//  Last Modified : 2015-06-04 11:52:19
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -88,10 +88,10 @@ module musb_hazard_unit(
     //--------------------------------------------------------------------------
     // assignments
     //--------------------------------------------------------------------------
-    assign id_rs_is_zero        = (id_rs == 5'b0);
-    assign id_rt_is_zero        = (id_rt == 5'b0);
-    assign ex_rs_is_zero        = (ex_rs == 5'b0);
-    assign ex_rt_is_zero        = (ex_rt == 5'b0);
+    assign id_rs_is_zero        = ~(|id_rs); // check if zero
+    assign id_rt_is_zero        = ~(|id_rt); // check if zero
+    assign ex_rs_is_zero        = ~(|ex_rs); // check if zero
+    assign ex_rt_is_zero        = ~(|ex_rt); // check if zero
 
     assign id_ex_rt_match_mtc0  = (~id_rt_is_zero) & (id_rt == ex_gpr_wa)  & id_mtc0;           // Match register
     assign id_ex_rs_match       = (~id_rs_is_zero) & (id_rs == ex_gpr_wa)  & ex_gpr_we;         // Match registers

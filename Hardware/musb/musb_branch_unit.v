@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_branch_unit.v
 //  Created On    : 2014-09-27 20:14:58
-//  Last Modified : 2015-05-24 21:00:28
+//  Last Modified : 2015-06-04 11:25:07
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -41,9 +41,9 @@ module musb_branch_unit(
     //--------------------------------------------------------------------------
     assign beq           = id_data_rs == id_data_rt;
     assign bne           = ~beq;
-    assign bgez          = ~id_data_rs[31];
-    assign bgtz          = id_data_rs > 32'b0;
-    assign blez          = ~bgtz;
+    assign bgez          = ~bltz;
+    assign bgtz          = ~bgez;
+    assign blez          = bltz | ~(|id_data_rs);
     assign bltz          = id_data_rs[31];
     assign long_jump     = {id_pc_add4[31:28], op_imm26, 2'b00 };
     assign short_jump    = $signed(id_pc_add4) + $signed( { op_imm26[`MUSB_INSTR_IMM16], 2'b00 } );
@@ -67,17 +67,17 @@ module musb_branch_unit(
                                         `RT_OP_BGEZAL           : begin pc_branch_address <= short_jump; take_branch <= bgez; end
                                         `RT_OP_BLTZ             : begin pc_branch_address <= short_jump; take_branch <= bltz; end
                                         `RT_OP_BLTZAL           : begin pc_branch_address <= short_jump; take_branch <= bltz; end
-                                        default                 : begin pc_branch_address <= 32'bx00;    take_branch <= 1'b0; end
+                                        default                 : begin pc_branch_address <= 32'bx;    take_branch <= 1'b0; end
                                     endcase
                                 end
             `OP_TYPE_R      :   begin
                                     case(inst_function)
                                         `FUNCTION_OP_JALR : begin pc_branch_address <= id_data_rs; take_branch <= 1'b1; end
                                         `FUNCTION_OP_JR   : begin pc_branch_address <= id_data_rs; take_branch <= 1'b1; end
-                                        default           : begin pc_branch_address <= 32'bx00; take_branch <= 1'b0; end
+                                        default           : begin pc_branch_address <= 32'bx; take_branch <= 1'b0; end
                                     endcase
                                 end
-            default         :   begin pc_branch_address <= 32'bx00; take_branch <= 1'b0;    end
+            default         :   begin pc_branch_address <= 32'bx; take_branch <= 1'b0;    end
         endcase
     end
 endmodule

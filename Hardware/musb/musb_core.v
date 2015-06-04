@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_core.v
 //  Created On    : 2014-10-01 21:02:38
-//  Last Modified : 2015-05-31 22:56:22
+//  Last Modified : 2015-06-04 10:11:30
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -13,9 +13,9 @@
 `include "musb_defines.v"
 
 module musb_core#(
-    parameter ENABLE_HW_MULT  = 1,          // Implement the multiplier
-    parameter ENABLE_HW_DIV   = 1,          // Implement the divider
-    parameter ENABLE_HW_CLO_Z = 1           // Enable CLO/CLZ instruction
+    parameter ENABLE_HW_MULT  = 0,          // Implement the multiplier
+    parameter ENABLE_HW_DIV   = 0,          // Implement the divider
+    parameter ENABLE_HW_CLO_Z = 0           // Enable CLO/CLZ instruction
     )(
     input               clk,
     input               rst_i,
@@ -362,7 +362,7 @@ module musb_core#(
         .in0    ( id_gpr_rs[31:0]      ),
         .in1    ( mem_alu_result[31:0] ),
         .in2    ( wb_gpr_wd[31:0]      ),
-        .in3    ( 32'hDEAD_BEEF        ),
+        .in3    ( 32'hx                ),
         .select ( forward_id_rs[1:0]   ),
         .out    ( id_forward_rs[31:0]  )
         );
@@ -371,7 +371,7 @@ module musb_core#(
         .in0    ( id_gpr_rt[31:0]      ),
         .in1    ( mem_alu_result[31:0] ),
         .in2    ( wb_gpr_wd[31:0]      ),
-        .in3    ( 32'hDEAD_C0DE        ),
+        .in3    ( 32'hx                ),
         .select ( forward_id_rt[1:0]   ),
         .out    ( id_forward_rt[31:0]  )
         );
@@ -465,7 +465,7 @@ module musb_core#(
         .in0    ( ex_data_rs[31:0]     ),
         .in1    ( mem_alu_result[31:0] ),
         .in2    ( wb_gpr_wd[31:0]      ),
-        .in3    ( 32'hDEAD_BEEF        ),
+        .in3    ( 32'hx                ),
         .select ( forward_ex_rs[1:0]   ),
         .out    ( ex_forward_rs[31:0]  )
         );
@@ -474,7 +474,7 @@ module musb_core#(
         .in0    ( ex_data_rt[31:0]     ),
         .in1    ( mem_alu_result[31:0] ),
         .in2    ( wb_gpr_wd[31:0]      ),
-        .in3    ( 32'hDEAD_C0DE        ),
+        .in3    ( 32'hx                ),
         .select ( forward_ex_rt[1:0]   ),
         .out    ( ex_forward_rt[31:0]  )
         );
