@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_monitor_core.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-02 20:26:00
+//  Last Modified : 2015-06-03 22:54:24
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -15,9 +15,12 @@
 `timescale 1ns / 100ps
 
 `define cycle                   20
-`define TRACE_BUFFER_SIZE       10000
-`define EXCEPTION_BUFFER_SIZE   10000
+`define TRACE_BUFFER_SIZE       10000000
+`define EXCEPTION_BUFFER_SIZE   10000000
 `define TIMEOUT_DEFAULT         30000
+`define REG_FILE                "register.log"
+`define MEM_DUMP                "memory.log"
+`define TRACE_FILE              "trace.log"
 
 module musb_monitor_core(
     input               halt,
@@ -132,13 +135,15 @@ module musb_monitor_core(
     // Print GPR
     task print_gpr;
         integer index;
+        integer file;
 
         begin
-            $display("INFO-MONITOR:\tRegister file dump:\n");
+            file = $fopen(`REG_FILE, "w");
             for(index = 1; index < 32; index = index + 1) begin
-                $display("\tR[%02d] = 0x%8h ( %d )", index, core.GPR.registers[index], core.GPR.registers[index]);
+                $fwrite(file, "R[%02d] = 0x%8h ( %d )\n", index, core.GPR.registers[index], core.GPR.registers[index]);
             end
-            $display("\nINFO-MONITOR:\tEnd register file dump.\n");
+            $display("INFO-MONITOR:\tRegister dump: DONE.");
+            $fclose(file);
         end
     endtask
 
@@ -146,7 +151,29 @@ module musb_monitor_core(
     // Dump the memory
     task dump_memory;
         begin
-            $writememh("core_dump.txt", memory0.mem);
+            $writememh(`MEM_DUMP, memory0.mem);
+            $display("INFO-MONITOR:\tMemory dump: DONE.");
+        end
+    endtask
+
+    //--------------------------------------------------------------------------
+    // Print trace
+    task print_trace;
+        integer file;
+        integer index;
+
+        begin
+            file = $fopen(`TRACE_FILE, "w");
+            $fwrite(file, "---------------------------------------------------------------------------------------------------------------------------------------\n");
+            $fwrite(file, "| %-9s | %-11s | %-11s | %-30s | %-48s | %-s |\n", "Time (ns)", "PC", "Instruction", "Assembler", "Result", "Flushed");
+            $fwrite(file, "---------------------------------------------------------------------------------------------------------------------------------------\n");
+
+            for(index = 0; index < trace_fill_counter; index = index + 1) begin
+                $fwrite(file, "%-0s\n", trace_buffer[index]);
+            end
+            $fwrite(file, "---------------------------------------------------------------------------------------------------------------------------------------\n");
+            $display("INFO-MONITOR:\tPrint trace: DONE.");
+            $fclose(file);
         end
     endtask
 
@@ -527,6 +554,7 @@ module musb_monitor_core(
     // print stats
     task print_stats;
         integer index;
+
         begin
             $display();
             $display("INFO-MONITOR:\tHalt signal assertion (Time: %0d ns).", $time - 1);
@@ -541,21 +569,11 @@ module musb_monitor_core(
             end
 
             $display("INFO-MONITOR:\tHalt signal assertion (Time: %0d ns).", $time - 1);
-            $display("INFO-MONITOR:\tPrinting program trace, performing the memory dump, and the register dump.\n");
-            //$display("-----------------------------------------------------------------------------------------------------------------------------");
-            //$display("Program trace:");
-            $display("---------------------------------------------------------------------------------------------------------------------------------------");
-            $display("| %-9s | %-11s | %-11s | %-30s | %-48s | %-s |", "Time (ns)", "PC", "Instruction", "Assembler", "Result", "Flushed");
-            $display("---------------------------------------------------------------------------------------------------------------------------------------");
+            $display("INFO-MONITOR:\tPrinting program trace, performing the memory dump, and the register dump.");
 
-            for(index = 0; index < trace_fill_counter; index = index + 1) begin
-                $display("%-0s", trace_buffer[index]);
-            end
-            $display("---------------------------------------------------------------------------------------------------------------------------------------");
-            $display();
-
-            //dump_memory();
-            //print_gpr();
+            print_trace();
+            dump_memory();
+            print_gpr();
         end
     endtask
 
@@ -638,6 +656,10 @@ module musb_monitor_core(
         $display("--------------------------------------------------------------------------");
         $display();
 
+        `ifdef TEST
+            $display("INFO-MONITOR:\tUsing the <%s> test", `TEST);
+        `endif
+
         // dump the wave file
         `ifdef NODUMP
             $display("INFO-MONITOR:\tDump of variables: DISABLED.");
@@ -655,12 +677,12 @@ module musb_monitor_core(
 
         // wait until end
         `ifdef TIMEOUT
-            $display("INFO-MONITOR:\tTimeout value: %d cycles", `TIMEOUT);
+            $display("INFO-MONITOR:\tUser timeout value: %d cycles", `TIMEOUT);
             $display("INFO-MONITOR:\tCPU (core) frequency: %d MHz", 1000/`cycle);
             $display();
             #(`TIMEOUT*`cycle)
         `else
-            $display("INFO-MONITOR:\tTimeout value: %d cycles", `TIMEOUT_DEFAULT);
+            $display("INFO-MONITOR:\tUsind default timeout value: %d cycles", `TIMEOUT_DEFAULT);
             $display("INFO-MONITOR:\tCPU (core) frequency: %d MHz", 1000/`cycle);
             $display();
             #(`TIMEOUT_DEFAULT*`cycle)

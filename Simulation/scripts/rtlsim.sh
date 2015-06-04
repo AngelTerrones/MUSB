@@ -12,21 +12,9 @@
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
-# Constants
+# Folders
 #-------------------------------------------------------------------------------
-# text attributes: normal, bold, underline
-n='\e[0m';
-b='\e[1m';
-u='\e[4m';
-
-# green
-g='\e[32m';
-
-# red
-r='\e[31m';
-
-# blue
-B='\e[34m';
+OUT_FOLDER=../out;
 
 #-------------------------------------------------------------------------------
 # Parameter Check
@@ -36,8 +24,8 @@ if [ $# -ne $EXPECTED_ARGS ]; then
     echo
     echo -e "ERROR      : wrong number of arguments"
     echo -e "USAGE      : rtlsim <Testbench file> <test name> <include list> <timeout (n° cycles)> <dump VCD>"
-    echo -e "Example    : rtlsim tb_core.v addiu filelist.prj 10000 1"
-    echo -e "Example    : rtlsim tb_core.v addiu filelist.prj 60000 0"
+    echo -e "Example    : rtlsim tb_core addiu filelist.prj 10000 1"
+    echo -e "Example    : rtlsim tb_core addiu filelist.prj 60000 0"
     echo
     exit 1
 fi
@@ -91,7 +79,7 @@ else
 fi
 
 # compile testbench, use include list, and generate vvp file
-if !(iverilog -c$3 -s $1 -o ../out/$1.vvp -D TIMEOUT=$4 ${NODUMP}) then
+if !(iverilog -c$3 -s $1 -o ../out/$1.vvp -DTIMEOUT=$4 ${NODUMP} -DTEST=\"$2\") then
     echo -e "ERROR:\tCompile error: TB = $(readlink -f ${tb})"
     echo -e "--------------------------------------------------------------------------"
     exit 1
@@ -116,3 +104,11 @@ fi
 echo -e "--------------------------------------------------------------------------"
 echo -e "INFO:\tVerilog simulation: DONE."
 echo -e "--------------------------------------------------------------------------"
+
+#-------------------------------------------------------------------------------
+# Move log files
+#-------------------------------------------------------------------------------
+mkdir -p ${OUT_FOLDER}/log
+cp ${OUT_FOLDER}/register.log ${OUT_FOLDER}/log/$2-register.log
+cp ${OUT_FOLDER}/memory.log ${OUT_FOLDER}/log/$2-memory.log
+cp ${OUT_FOLDER}/trace.log ${OUT_FOLDER}/log/$2-trace.log
