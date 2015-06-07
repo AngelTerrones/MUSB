@@ -55,9 +55,10 @@ fi
 #-------------------------------------------------------------------------------
 rm -rf ${BUILD_FOLDER}/*
 mkdir -p ${BUILD_FOLDER}
+mkdir -p ${BUILD_FOLDER}/src
 cp ${TEMPLATES_FOLDER}/makefile_template ${BUILD_FOLDER}/makefile
 cp ${TEMPLATES_FOLDER}/linker_template ${BUILD_FOLDER}/linker.ls
-cp ${asm} ${BUILD_FOLDER}/$1.s
+cp ${asm} ${BUILD_FOLDER}/src/$1.s
 
 
 #-------------------------------------------------------------------------------
@@ -83,23 +84,21 @@ sed -i "s/%exceptioncode%//g" ${BUILD_FOLDER}/linker.ls
 #-------------------------------------------------------------------------------
 # Regenerate makefile
 #-------------------------------------------------------------------------------
-# targets
-O_TARGET="\nout/$1.o : $1.s\n\t@mkdir -p out\n\t@\$(MIPS_AS) \$(AS_FLAGS) $1.s -o out/$1.o"
-CLEAN_TARGET="\nclean :\n\trm -rf *.o *.bin *.lst out bin/*\n"
+PAD_SIZE=$(($2/4))
+DATA_BEGIN=$(($2-$3))
 
 # search & replace variables
 sed -i "s/%prefix%/$MIPS_PREFIX/g" ${BUILD_FOLDER}/makefile
 sed -i "s@%bin%@$MIPS_BIN@g" ${BUILD_FOLDER}/makefile
 sed -i "s@%base%@$MIPS_BASE@g" ${BUILD_FOLDER}/makefile
+sed -i "s@%util%@$UTIL_FOLDER@g" ${BUILD_FOLDER}/makefile
+sed -i "s/%linker%/linker.ls/g" ${BUILD_FOLDER}/makefile
+sed -i "s/%optlevel%/3/g" ${BUILD_FOLDER}/makefile
 
 sed -i "s@%project%@$1@g" ${BUILD_FOLDER}/makefile
-sed -i "s@%targets%@out/$1.o@g" ${BUILD_FOLDER}/makefile
-sed -i "s/%linker%/linker.ls/g" ${BUILD_FOLDER}/makefile
-sed -i "s@%util%@$UTIL_FOLDER@g" ${BUILD_FOLDER}/makefile
+sed -i "s/%datasegbegin%/${DATA_BEGIN}/g" ${BUILD_FOLDER}/makefile
+sed -i "s/%padsize%/${PAD_SIZE}/g" ${BUILD_FOLDER}/makefile
 
-# populate targets
-echo -e ${O_TARGET} >> ${BUILD_FOLDER}/makefile
-echo -e ${CLEAN_TARGET} >> ${BUILD_FOLDER}/makefile
 
 #-------------------------------------------------------------------------------
 # Build utils if necessary:
@@ -124,4 +123,4 @@ echo -e "-----------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 # Copy test to out folder
 #-------------------------------------------------------------------------------
-mv ${BUILD_FOLDER}/$1.mem ${BUILD_FOLDER}/../mem.hex
+mv ${BUILD_FOLDER}/bin/$1.mem ${BUILD_FOLDER}/../mem.hex

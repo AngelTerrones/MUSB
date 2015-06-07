@@ -109,6 +109,6 @@ echo -e "-----------------------------------------------------------------------
 # Move log files
 #-------------------------------------------------------------------------------
 mkdir -p ${OUT_FOLDER}/log
-cp ${OUT_FOLDER}/register.log ${OUT_FOLDER}/log/$2-register.log
-cp ${OUT_FOLDER}/memory.log ${OUT_FOLDER}/log/$2-memory.log
-cp ${OUT_FOLDER}/trace.log ${OUT_FOLDER}/log/$2-trace.log
+mv ${OUT_FOLDER}/register.log ${OUT_FOLDER}/log/$2-register.log
+mv ${OUT_FOLDER}/memory.log ${OUT_FOLDER}/log/$2-memory.log
+mv ${OUT_FOLDER}/trace.log ${OUT_FOLDER}/log/$2-trace.log
