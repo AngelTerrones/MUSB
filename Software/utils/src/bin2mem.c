@@ -122,7 +122,7 @@ void help(void){
     exit(1);
 }
 
-// Convert a integer to hex, in big endian or little endian format.
+// Read a file
 void readFile(char *name, int *size, char **buffer){
     FILE *file;
 
