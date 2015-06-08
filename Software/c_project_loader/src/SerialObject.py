@@ -93,7 +93,7 @@ class SerialObject(QObject):
         dataRx = port.readAll()
         while port.waitForReadyRead(10):
             dataRx += port.readAll()
-
+        print(dataRx)
         if dataRx != b"USB":
             port.close()
             self.message.emit("ERROR:\tInvalid start token.\n")
@@ -103,22 +103,22 @@ class SerialObject(QObject):
 
         # send ACK
         self.message.emit("INFO:\tStart token received: bootloading.\n")
-        port.write("ACK")
 
         # send bin size
         binSize = os.path.getsize(self._binFile)
         binSizeWord = int((binSize/4) - 1)
-        print(binSizeWord, hex(binSizeWord))
+        # print(binSizeWord, hex(binSizeWord))
         binSizeWord = struct.pack('I', binSizeWord)
-        print(binSizeWord)
-        print(binSizeWord[0], binSizeWord[1], binSizeWord[2])
-        port.write(chr(binSizeWord[0]))
-        port.write(chr(binSizeWord[1]))
-        port.write(chr(binSizeWord[2]))
-        port.waitForBytesWritten(100)
+        # print(binSizeWord)
+        # print(binSizeWord[0], binSizeWord[1], binSizeWord[2])
+        port.write(b"ACK" + binSizeWord)
+        port.flush()
+        # port.write(chr(binSizeWord[0]))
+        # port.write(chr(binSizeWord[1]))
+        # port.write(chr(binSizeWord[2]))
 
         # wait for KCA
-        port.waitForReadyRead(5000)
+        port.waitForReadyRead(500)
         dataRx = port.readAll()
         while port.waitForReadyRead(10):
             dataRx += port.readAll()
@@ -132,8 +132,10 @@ class SerialObject(QObject):
 
         # sending bin file
         self.message.emit("INFO:\tSending bin file. Please wait.\n")
+        port.flush()
         bytesTx = port.write(binData)
-        port.waitForBytesWritten(5000)
+        port.flush()
+        port.waitForBytesWritten(500)
         if bytesTx != binSize:
             port.close()
             message = "ERROR:\tTruncated data. Unable to boot target.\n"
@@ -143,11 +145,11 @@ class SerialObject(QObject):
             return
 
         # wait for ACK
-        port.waitForReadyRead(5000)
+        port.waitForReadyRead(500)
         dataRx = port.readAll()
         while port.waitForReadyRead(10):
             dataRx += port.readAll()
-
+        print(dataRx)
         if dataRx != b"ACK":
             port.close()
             message = "ERROR:\tUnable to boot. Processor in unknown state.\n"
