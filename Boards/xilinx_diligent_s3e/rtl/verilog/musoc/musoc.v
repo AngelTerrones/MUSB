@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musoc.v
 //  Created On    : 2015-01-10 21:18:59
-//  Last Modified : 2015-05-28 09:43:30
+//  Last Modified : 2015-06-08 00:30:34
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -29,8 +29,23 @@ module musoc#(
     input           clk,
     input           rst,
     output          halted,
-    // GPIO
-    inout   [31:0]  gpio_a_inout,
+    // LED
+    output  [7:0]   LED,
+    // Switches
+    input   [3:0]   SW,
+    // Push button
+    input   [2:0]   BTN,
+    // Rotary Shaft Encoder
+    input           ROTCTR,
+    // Liquid Crystal Display
+    output          LCDE,
+    output          LCDRS,
+    output          LCDRW,
+    output  [3:0]   LCDDAT,
+    // Peripheral Port A
+    inout   [3:0]   PPORTA,
+    // Peripheral Port B
+    inout   [3:0]   PPORTB,
     // UART
     input           uart_rx,
     output          uart_tx
@@ -86,6 +101,11 @@ module musoc#(
     wire            ms_ready;
     wire            ms_error;
 
+    wire    [31:0]  gpio_o;
+    wire    [31:0]  gpio_oe;
+    wire    [31:0]  gpio_i;
+    wire    [7:0]   gpio_inout;
+
     wire    [3:0]   gpio_interrupt;
     wire            uart_rx_ready_int;
     wire            bootloader_reset_core;
@@ -93,6 +113,24 @@ module musoc#(
 
     wire            clk_core;
     wire            clk_bus;
+
+    //--------------------------------------------------------------------------
+    // assign
+    // GPIO[7:0]   = output
+    // GPIO[15:8]  = input
+    // GPIO[23:16] = output
+    // GPIO[31:24] = inout
+    //--------------------------------------------------------------------------
+    assign LED           = gpio_o[7:0];
+    assign gpio_i[11:8]  = SW;
+    assign gpio_i[14:12] = BTN;
+    assign gpio_i[15]    = ROTCTR;
+    assign LCDE          = gpio_o[16];
+    assign LCDRS         = gpio_o[17];
+    assign LCDRW         = gpio_o[18];
+    assign LCDDAT        = gpio_o[22:19];
+    assign PPORTA        = gpio_inout[3:0];
+    assign PPORTB        = gpio_inout[7:4];
 
     //--------------------------------------------------------------------------
     // Clock frequency generator.
@@ -131,7 +169,7 @@ module musoc#(
             .dport_wr       ( master1_wr[3:0]                          ),
             .dport_enable   ( master1_enable                           ),
             .clk            ( clk_core                                 ),
-            .rst            ( rst_module | bootloader_reset_core       ),
+            .rst_i          ( rst_module | bootloader_reset_core       ),
             .interrupts     ( {uart_rx_ready_int, gpio_interrupt[3:0]} ),
             .nmi            ( 1'b0                                     ),
             .iport_data_i   ( master_data_o[31:0]                      ),
@@ -221,13 +259,15 @@ module musoc#(
     // I/O
     //--------------------------------------------------------------------------
     gpio gpio0(/*autoinst*/
-        .gpio_inout     ( gpio_a_inout[31:0]  ),
+        .gpio_o         ( gpio_o              ),
+        .gpio_oe        ( gpio_oe             ),
         .gpio_data_o    ( slave1_data_i[31:0] ),
         .gpio_ready     ( slave1_ready        ),
         .gpio_interrupt ( gpio_interrupt[3:0] ),
         .clk            ( clk_bus             ),
         .rst            ( rst_module          ),
-        .gpio_address   ( slave_address[4:0]  ),
+        .gpio_i         ( gpio_i              ),
+        .gpio_address   ( slave_address[31:0] ),
         .gpio_data_i    ( slave_data_o[31:0]  ),
         .gpio_wr        ( slave_wr[3:0]       ),
         .gpio_enable    ( slave1_enable       )
@@ -257,5 +297,15 @@ module musoc#(
             .bootloader_reset_core ( bootloader_reset_core ),
             .uart_rx               ( uart_rx               ),
             .uart_tx               ( uart_tx               )
+        );
+
+    io_cell #(
+        .WIDTH(8)
+        )
+        io_cell0(
+            .io_pad ( gpio_inout     ),
+            .data_o ( gpio_o[31:24]  ),
+            .oe     ( gpio_oe[31:24] ),
+            .data_i ( gpio_i[31:24]  )
         );
 endmodule

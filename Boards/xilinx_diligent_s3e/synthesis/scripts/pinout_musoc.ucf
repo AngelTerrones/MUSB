@@ -20,49 +20,49 @@ NET     "clk"               PERIOD = 20 nS          LOW 10.0 nS;
 #-------------------------------------------------------------------------------
 # Clock
 #-------------------------------------------------------------------------------
-NET     "clk"               LOC = "T9"  | IOSTANDARD = LVTTL ;                  // Input
+NET     "clk"               LOC = "C9"  | IOSTANDARD = LVTTL ;                  // Input
 
 #-------------------------------------------------------------------------------
 # Reset & UARTboot
 #-------------------------------------------------------------------------------
-NET     "rst"               LOC = "L14" | IOSTANDARD = LVTTL ;                  // Input
-NET     "uart_rx"           LOC = "T13" | IOSTANDARD = LVTTL ;                  // Input
-NET     "uart_tx"           LOC = "R13" | IOSTANDARD = LVTTL ;                  // Output
+NET     "rst"               LOC = "K17" | IOSTANDARD = LVTTL ;                                  // Input
+NET     "uart_rx"           LOC = "R7"  | IOSTANDARD = LVTTL ;                                  // Input
+NET     "uart_tx"           LOC = "M14" | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = SLOW;         // Output
 
 #-------------------------------------------------------------------------------
 # GPIO
 #-------------------------------------------------------------------------------
-NET     "gpio_a_inout<0>"   LOC = "F12" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<1>"   LOC = "G12" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<2>"   LOC = "H14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<3>"   LOC = "H13" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<4>"   LOC = "J14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<5>"   LOC = "J13" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<6>"   LOC = "K14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<7>"   LOC = "K13" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<8>"   LOC = "K12" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<9>"   LOC = "P14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<10>"  LOC = "L12" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<11>"  LOC = "N14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<12>"  LOC = "P13" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<13>"  LOC = "N12" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<14>"  LOC = "P12" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<15>"  LOC = "P11" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<16>"  LOC = "E14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<17>"  LOC = "G13" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<18>"  LOC = "N15" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<19>"  LOC = "P15" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<20>"  LOC = "R16" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<21>"  LOC = "F13" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<22>"  LOC = "N16" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<23>"  LOC = "P16" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<24>"  LOC = "D14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<25>"  LOC = "G14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<26>"  LOC = "F14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<27>"  LOC = "E13" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<28>"  LOC = "M13" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<29>"  LOC = "M14" | IOSTANDARD = LVTTL ;                  // I/O
-NET     "gpio_a_inout<30>"  LOC = "L13" | IOSTANDARD = LVTTL ;                  // I/O
+NET     "LED<0>"          LOC = "F12" | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = SLOW;
+NET     "LED<1>"          LOC = "E12" | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = SLOW;
+NET     "LED<2>"          LOC = "E11" | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = SLOW;
+NET     "LED<3>"          LOC = "F11" | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = SLOW;
+NET     "LED<4>"          LOC = "C11" | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = SLOW;
+NET     "LED<5>"          LOC = "D11" | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = SLOW;
+NET     "LED<6>"          LOC = "E9"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = SLOW;
+NET     "LED<7>"          LOC = "F9"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = SLOW;
+NET     "SW<0>"           LOC = "L13" | IOSTANDARD = LVTTL | PULLUP;
+NET     "SW<1>"           LOC = "L14" | IOSTANDARD = LVTTL | PULLUP;
+NET     "SW<2>"           LOC = "H18" | IOSTANDARD = LVTTL | PULLUP;
+NET     "SW<3>"           LOC = "N17" | IOSTANDARD = LVTTL | PULLUP;
+NET     "BTN<0>"          LOC = "V4"  | IOSTANDARD = LVTTL | PULLDOWN;
+NET     "BTN<1>"          LOC = "H13" | IOSTANDARD = LVTTL | PULLDOWN;
+NET     "BTN<2>"          LOC = "D18" | IOSTANDARD = LVTTL | PULLDOWN;
+NET     "ROTCTR"          LOC = "V16" | IOSTANDARD = LVTTL | PULLDOWN;
+NET     "LCDE"            LOC = "M18" | IOSTANDARD = LVTTL | DRIVE = 4 | SLEW = SLOW;
+NET     "LCDRS"           LOC = "L18" | IOSTANDARD = LVTTL | DRIVE = 4 | SLEW = SLOW;
+NET     "LCDRW"           LOC = "L17" | IOSTANDARD = LVTTL | DRIVE = 4 | SLEW = SLOW;
+NET     "LCDDAT<0>"       LOC = "R15" | IOSTANDARD = LVTTL | DRIVE = 4 | SLEW = SLOW;
+NET     "LCDDAT<1>"       LOC = "R16" | IOSTANDARD = LVTTL | DRIVE = 4 | SLEW = SLOW;
+NET     "LCDDAT<2>"       LOC = "P17" | IOSTANDARD = LVTTL | DRIVE = 4 | SLEW = SLOW;
+NET     "LCDDAT<3>"       LOC = "M15" | IOSTANDARD = LVTTL | DRIVE = 4 | SLEW = SLOW;
+NET     "PPORTA<0>"       LOC = "B4"  | IOSTANDARD = LVTTL ;
+NET     "PPORTA<1>"       LOC = "A4"  | IOSTANDARD = LVTTL ;
+NET     "PPORTA<2>"       LOC = "D5"  | IOSTANDARD = LVTTL ;
+NET     "PPORTA<3>"       LOC = "C5"  | IOSTANDARD = LVTTL ;
+NET     "PPORTB<0>"       LOC = "A6"  | IOSTANDARD = LVTTL ;
+NET     "PPORTB<1>"       LOC = "B6"  | IOSTANDARD = LVTTL ;
+NET     "PPORTB<2>"       LOC = "E7"  | IOSTANDARD = LVTTL ;
+NET     "PPORTB<3>"       LOC = "F7"  | IOSTANDARD = LVTTL ;
 
 #-----------------------------------------------------------------------------------------------------------------------
 # All pins
@@ -263,8 +263,8 @@ NET     "gpio_a_inout<30>"  LOC = "L13" | IOSTANDARD = LVTTL ;                  
 #-------------------------------------------------------------------------------
 #Prohibit Use of Vref Pins
 #-------------------------------------------------------------------------------
-#CONFIG PROHIBIT = D2;
-#CONFIG PROHIBIT = G4;
-#CONFIG PROHIBIT = J6;
-#CONFIG PROHIBIT = L5;
-#CONFIG PROHIBIT = R4;
+CONFIG PROHIBIT = D2;
+CONFIG PROHIBIT = G4;
+CONFIG PROHIBIT = J6;
+CONFIG PROHIBIT = L5;
+CONFIG PROHIBIT = R4;
