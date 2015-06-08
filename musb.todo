@@ -18,22 +18,19 @@ MUSB:
     Release 1.1:
     Tast list for **Release 1.1** @created(15-05-21 23:14)
         MIPS core:
-            [ ] Optimization (reduce area).
+            Nothing to be done.
         SoC:
-            [ ] GPIO: separar el manejo del puerto del manejo de los pines. Crear un IO_cell (tomado de **OpenMSP430**).
-                For easy simulation.
-            [ ] UART/FIFO/RAM: Use async ram (distibuted). Check performance (up to 256 bytes buffer. Maybe 128).
+            Nothing to be done.
         Synthesys:
-            [ ] Populate UCF file: use all pins and set unused to GND (using iobuf).
+            Nothing to be done.
         Tesbenchs:
-            [ ] Update make help.
             [ ] Basic wave settings.
             [ ] Check if the test is OK.
             [ ] Make C tests. Buscar forma de probar que el test ejecutó en forma correcta.
         Software and library:
             [ ] Make library.
         Utils:
-            [ ] Make loader: python + Tk
+            Nothing to be done.
         Documentation:
             [ ] Update READMEs.
             [ ] Update manual.
@@ -65,9 +62,16 @@ MUSB:
             [ ] Write wiki (export manual).
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ [-] Populate UCF file: use all pins and set unused to GND (using iobuf). @cancelled (15-06-08 01:30) @project(Release 1.1 / Synthesys)
+ [x] Optimization (reduce area). @done (15-06-07 15:36) @project(Release 1.1 / MIPS core)
+ [x] Make loader: python + Qt @done (15-06-07 15:35) @project(Release 1.1 / Utils)
+ [-] UART/FIFO/RAM: Use async ram (distibuted). Check performance (up to 256 bytes buffer. Maybe 128). @cancelled (15-06-07 15:35) @project(Release 1.1 / SoC)
+ [x] Update make help. @done (15-06-03 23:00) @project(Release 1.1 / Tesbenchs)
+ [x] GPIO: separar el manejo del puerto del manejo de los pines. Crear un IO_cell (tomado de **OpenMSP430**). @done (15-06-03 14:51) @project(Release 1.1 / SoC)
+  For easy simulation.
+ [x] Update testbench. @done (15-05-31 18:25) @project(Release 1.1 / Tesbenchs)
  [x] Create board for the Spartan 3E board. @done (15-05-31 18:25) @project(Release 1.1 / SoC)
   Depends previous task.
- [x] Update testbench. @done (15-05-31 18:25) @project(Release 1.1 / Tesbenchs)
  [x] New IDE: Eclipse plugin?. Intellij based IDE? Intellij Plugin? Makefile FTW? @done (15-05-29 13:51) @project(Release 2 / Software and library)
  [x] Implement a debug monitor (testbench). @done (15-05-29 13:51) @project(Release 2 / Tesbenchs)
   Check **OpenMSP430** y el **OpenRISC**.
