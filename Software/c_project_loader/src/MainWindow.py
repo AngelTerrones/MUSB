@@ -30,30 +30,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     MUSB processor.
     """
 
-    # global
+    # static
     utilPath = os.path.abspath("../../utils")
     optimizationLevel = ["0", "1", "2", "3", "s"]
 
     def __init__(self):
         super(MainWindow, self).__init__()
         self._openPort = False
-        self._serialPort = serial(self)
         self._serialThread = QtCore.QThread()
         self._serialObject = SerialObject()
         self._serialObject.moveToThread(self._serialThread)
         self._setupUi()
         self._connectSignalSlots()
         self.loadSerialPorts()
-
-    def closeEvent(self, event):
-        """
-        Close event.
-        If the port is currently open, close before exit
-        Maybe this is not necessary in python, but I'm accustomed
-        to C++ code.
-        """
-        if self._openPort:
-            self.openPort()
 
     def _setupUi(self):
         """
@@ -75,7 +64,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButtonUpdate.clicked.connect(self.updateProject)
         self.pushButtonExit.clicked.connect(self.close)
         self.pushButtonReload.clicked.connect(self.loadSerialPorts)
-        self.pushButtonOpenPort.clicked.connect(self.openPort)
         self.toolButtonSeletBinFile.clicked.connect(self.selectBinFile)
         self.pushButtonBoot.clicked.connect(self.bootTarget)
         self.pushButtonClear.clicked.connect(self.textEdit.clear)
@@ -326,12 +314,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._serialPort.setParity(serial.NoParity)
             self._serialPort.setFlowControl(serial.NoFlowControl)
 
-            self.pushButtonOpenPort.setText("Close")
+            self.pushButtonOpenPort.setText("&Close")
             self.pushButtonReload.setDisabled(True)
             self.comboBoxSerialPort.setDisabled(True)
         else:
             self._serialPort.close()
-            self.pushButtonOpenPort.setText("Open")
+            self.pushButtonOpenPort.setText("&Open")
             self.pushButtonReload.setEnabled(True)
             self.comboBoxSerialPort.setEnabled(True)
             self._openPort = False
@@ -356,12 +344,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Send the bin file to target
         """
-        if not self._openPort:
-            title = "Boot error"
-            message = "Open a serial port first."
-            QMessageBox.critical(self, title, message)
-            return
-
         binFile = self.lineEditBinFile.text()
         if not os.path.exists(binFile):
             title = "Boot error"
@@ -371,35 +353,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.pushButtonBoot.setDisabled(True)
 
-        # Info
-        message = "INFO:\tBooting target.\n"
-        self.insertMessage(message)
-        fileSize = os.path.getsize(binFile)
-        message = "INFO:\tSize = {} bytes.\n".format(fileSize)
-        self.insertMessage(message)
-
         # start thread
-        self._serialObject.setPort(self._serialPort)
+        portName = self.comboBoxSerialPort.currentText()
+        self._serialObject.setPortName(portName)
         self._serialObject.setBinFile(binFile)
         self._serialThread.start()
 
-        """
-        # Disable boot button
-
-        self._serialPort.clear()
-        message = "INFO:\tPlease, reset target."
-        dataReady = self._serialPort.waitForReadyRead(5000)
-        if not dataReady:
-            message = "ERROR:\tTarget nor detected."
-            self.pushButtonBoot.setEnabled(True)
-            return
-
-        # Enable boot button again
-        self.pushButtonBoot.setEnabled(True)
-        """
-
     def bootThreadFinished(self):
         """
+        The thread finished
         """
         self.pushButtonBoot.setEnabled(True)
 

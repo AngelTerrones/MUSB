@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'Ui/MainWindow.ui'
 #
-# Created: Mon Jun  8 01:18:55 2015
+# Created: Mon Jun  8 12:29:11 2015
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -133,15 +133,6 @@ class Ui_MainWindow(object):
         self.groupBox_7.setObjectName("groupBox_7")
         self.gridLayout_12 = QtWidgets.QGridLayout(self.groupBox_7)
         self.gridLayout_12.setObjectName("gridLayout_12")
-        self.pushButtonOpenPort = QtWidgets.QPushButton(self.groupBox_7)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButtonOpenPort.sizePolicy().hasHeightForWidth())
-        self.pushButtonOpenPort.setSizePolicy(sizePolicy)
-        self.pushButtonOpenPort.setFocusPolicy(QtCore.Qt.TabFocus)
-        self.pushButtonOpenPort.setObjectName("pushButtonOpenPort")
-        self.gridLayout_12.addWidget(self.pushButtonOpenPort, 0, 2, 1, 1)
         self.comboBoxSerialPort = QtWidgets.QComboBox(self.groupBox_7)
         self.comboBoxSerialPort.setObjectName("comboBoxSerialPort")
         self.gridLayout_12.addWidget(self.comboBoxSerialPort, 0, 0, 1, 1)
@@ -235,7 +226,6 @@ class Ui_MainWindow(object):
         self.lineEditCompilerPath.setPlaceholderText(_translate("MainWindow", "<if not in path>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Project"))
         self.groupBox_7.setTitle(_translate("MainWindow", "Serial Port"))
-        self.pushButtonOpenPort.setText(_translate("MainWindow", "&Open"))
         self.pushButtonReload.setText(_translate("MainWindow", "&Reload"))
         self.groupBox_6.setTitle(_translate("MainWindow", "Bin File"))
         self.toolButtonSeletBinFile.setText(_translate("MainWindow", "..."))
