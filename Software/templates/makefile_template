@@ -6,11 +6,11 @@
 MIPS_PREFIX  = %prefix%
 MIPS_BIN     = %bin%
 MIPS_BASE    = %base%
-MIPS_CC      = $(MIPS_BIN)/$(MIPS_PREFIX)gcc
-MIPS_AS      = $(MIPS_BIN)/$(MIPS_PREFIX)as
-MIPS_LD      = $(MIPS_BIN)/$(MIPS_PREFIX)ld
-MIPS_OBJDUMP = $(MIPS_BIN)/$(MIPS_PREFIX)objdump
-MIPS_OBJCOPY = $(MIPS_BIN)/$(MIPS_PREFIX)objcopy
+MIPS_CC      = $(MIPS_PREFIX)gcc
+MIPS_AS      = $(MIPS_PREFIX)as
+MIPS_LD      = $(MIPS_PREFIX)ld
+MIPS_OBJDUMP = $(MIPS_PREFIX)objdump
+MIPS_OBJCOPY = $(MIPS_PREFIX)objcopy
 UTIL_PREFIX  = %util%
 UTIL_BIN2HEX = $(UTIL_PREFIX)/bin2hex
 UTIL_BIN2MEM = $(UTIL_PREFIX)/bin2mem
@@ -33,7 +33,7 @@ OBJECTS = $(SOURCES_C:src/%.c=out/%.o) $(SOURCES_S:src/%.s=out/%.o)
 
 .PHONY: clean
 
-bin: $(OBJECTS)
+bin/%project%.bin: $(OBJECTS)
 	@mkdir -p bin
 	@$(LD_DRIVER) $^ -o bin/%project%
 	@$(MIPS_OBJDUMP) -EL --disassemble bin/%project% > bin/%project%.lst
