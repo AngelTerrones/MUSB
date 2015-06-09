@@ -34,7 +34,6 @@ fi
 # Check if filelist exist
 #-------------------------------------------------------------------------------
 tb=../bench/verilog/$1.v;
-asm=../tests/asm/$2.s;
 
 if [ ! -e ${tb} ]; then
     echo
@@ -43,23 +42,9 @@ if [ ! -e ${tb} ]; then
     exit 1
 fi
 
-if [ ! -e ${asm} ]; then
-    echo
-    echo -e "ERROR:\tTest file doesn't exist: ${asm}"
-    echo
-    exit 1
-fi
-
 if [ ! -f ${tb} ]; then
     echo
     echo -e "ERROR:\tTestbench argument is not a file: $(readlink -f ${tb})"
-    echo
-    exit 1
-fi
-
-if [ ! -f ${asm} ]; then
-    echo
-    echo -e "ERROR:\tMemory argument is not a file: $(readlink -f ${asm})"
     echo
     exit 1
 fi
