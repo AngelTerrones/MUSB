@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : gpio.v
 //  Created On    : 2015-01-02 19:44:15
-//  Last Modified : 2015-06-03 12:16:37
+//  Last Modified : 2015-06-09 18:16:00
 //  Revision      :
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -25,7 +25,7 @@
 //==================================================================================================
 
 `define GPIO_PD         5'd0
-`define gpio_oe         5'd1
+`define GPIO_DD         5'd1
 `define GPIO_IE         5'd2
 `define GPIO_EP         5'd3
 `define GPIO_IC         5'd4
@@ -130,7 +130,7 @@ module gpio(
                                 gpio_o[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_o[23:16];
                                 gpio_o[31:24] <= (gpio_wr[3]) ? gpio_data_i[31:24] : gpio_o[31:24];
                             end
-                `gpio_oe:   begin
+                `GPIO_DD:   begin
                                 gpio_oe[7:0]   <= (gpio_wr[0]) ? gpio_data_i[7:0]   : gpio_oe[7:0];
                                 gpio_oe[15:8]  <= (gpio_wr[1]) ? gpio_data_i[15:8]  : gpio_oe[15:8];
                                 gpio_oe[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_oe[23:16];
@@ -178,7 +178,7 @@ module gpio(
         else if (enable_read) begin
             case(address[`GPIO_ADDR_RANGE])
                 `GPIO_PD : gpio_data_o <= gpio_data_reg_i;
-                `gpio_oe : gpio_data_o <= gpio_oe;
+                `GPIO_DD : gpio_data_o <= gpio_oe;
                 `GPIO_IE : gpio_data_o <= gpio_ie;
                 `GPIO_EP : gpio_data_o <= gpio_ep;
                 `GPIO_IC : gpio_data_o <= 32'h0;
