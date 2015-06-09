@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_monitor_core.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-03 22:54:24
+//  Last Modified : 2015-06-09 14:24:52
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -568,7 +568,6 @@ module musb_monitor_core(
                 $display("");
             end
 
-            $display("INFO-MONITOR:\tHalt signal assertion (Time: %0d ns).", $time - 1);
             $display("INFO-MONITOR:\tPrinting program trace, performing the memory dump, and the register dump.");
 
             print_trace();
