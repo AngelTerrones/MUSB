@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : uart_send.v
 //  Created On    : 2015-05-27 11:13:22
-//  Last Modified : 2015-05-27 12:46:45
+//  Last Modified : 2015-06-09 14:20:35
 //  Revision      : 1.0
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -33,6 +33,11 @@ module uart_send #(
         if (send) begin
             task_uart_tx;
         end
+    end
+
+    initial begin
+        uart_tx      <= 1'b1;
+        uart_tx_busy <= 1'b0;
     end
 
     //----------------------------------------------------------------------------

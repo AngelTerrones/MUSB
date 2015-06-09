@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_monitor_soc.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-08 21:39:03
+//  Last Modified : 2015-06-09 16:07:56
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -62,6 +62,7 @@ module musb_monitor_soc(
     //--------------------------------------------------------------------------
     wire [7:0]       rx_data;
     wire             uart_rx_idle;
+    wire             uart_tx_busy;
 
     //--------------------------------------------------------------------------
     // registers
@@ -74,6 +75,8 @@ module musb_monitor_soc(
     reg  [31:0]      wb_instruction;
     reg  [31:0]      wb_mem_address;
     reg  [31:0]      wb_mem_store_data;
+    reg  [7:0]       tx_data;
+    reg              uart_tx_enable;
 
     reg              id_instruction_stalled;
     reg              id_instruction_flushed;
@@ -576,7 +579,6 @@ module musb_monitor_soc(
                 $display("");
             end
 
-            $display("INFO-MONITOR:\tHalt signal assertion (Time: %0d ns).", $time - 1);
             $display("INFO-MONITOR:\tPrinting program trace, performing the memory dump, and the register dump.");
 
             print_trace();
@@ -689,6 +691,56 @@ module musb_monitor_soc(
             $write("%s", rx_data);
         end
     end
+
+    //--------------------------------------------------------------------------
+    // Test boot
+    //--------------------------------------------------------------------------
+    /*
+    uart_send uart_send0(
+        .clk          ( clk_bus        ),
+        .tx_data      ( tx_data        ),
+        .send         ( uart_tx_enable ),
+        .uart_tx      ( monitor_tx     ),
+        .uart_tx_busy ( uart_tx_busy   )
+        );
+
+    initial begin
+        uart_tx_enable <= 1'b0;
+        @(negedge rst)
+        tx_data <= "A";
+        uart_tx_enable <= 1'b1;
+        @(negedge uart_tx_busy)
+        tx_data <= "C";
+        uart_tx_enable <= 1'b1;
+        @(negedge uart_tx_busy)
+        tx_data <= "K";
+        uart_tx_enable <= 1'b1;
+        @(negedge uart_tx_busy)
+        // size
+        tx_data <= 0;
+        uart_tx_enable <= 1'b1;
+        @(negedge uart_tx_busy)
+        tx_data <= 0;
+        uart_tx_enable <= 1'b1;
+        @(negedge uart_tx_busy)
+        tx_data <= 0;
+        uart_tx_enable <= 1'b1;
+        // data
+        @(negedge uart_tx_busy)
+        tx_data <= 8'hAA;
+        uart_tx_enable <= 1'b1;
+        @(negedge uart_tx_busy)
+        tx_data <= 8'hBB;
+        uart_tx_enable <= 1'b1;
+        @(negedge uart_tx_busy)
+        tx_data <= 8'hCC;
+        uart_tx_enable <= 1'b1;
+        @(negedge uart_tx_busy)
+        tx_data <= 8'hDD;
+        uart_tx_enable <= 1'b1;
+        $display("ACK done. Now wait...");
+    end
+    */
 
     //--------------------------------------------------------------------------
     // Start Simulation
