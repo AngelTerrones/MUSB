@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_monitor_soc.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-03 22:58:51
+//  Last Modified : 2015-06-08 21:39:03
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -304,7 +304,7 @@ module musb_monitor_soc(
                                                                                   end
                                                                             end
                                                 `FUNCTION_OP_SLT        :   begin
-                                                                                  $sformat(instruction_string, "%-10s t\tr%-2d, r%-2d, r%-2d", "SLT", op_rd, op_rs, op_rt);
+                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SLT", op_rd, op_rs, op_rt);
                                                                                   if (~wb_instruction_flushed) begin
                                                                                       $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
                                                                                   end
@@ -686,7 +686,7 @@ module musb_monitor_soc(
             $display("INFO-MONITOR:\tUART Bootloader Rx='%c'", rx_data);
         end
         else begin
-            $display("%c", rx_data);
+            $write("%s", rx_data);
         end
     end
 
