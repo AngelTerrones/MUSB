@@ -111,7 +111,7 @@ make -s -C ${UTIL_FOLDER}
 #-------------------------------------------------------------------------------
 echo -e "--------------------------------------------------------------------------"
 echo -e "INFO:\tCompiling Assembler Test: $(readlink -f ${asm})"
-if !(make -s -C ${BUILD_FOLDER} DSEG_START=$(($2-$3)) MEM_SIZE=$2) then
+if !(make -s -C ${BUILD_FOLDER}) then
     echo -e ""
     echo -e "ERROR:\tCompile error: ASM = $(readlink -f ${asm})"
     echo -e ""
