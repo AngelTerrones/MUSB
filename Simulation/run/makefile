@@ -56,6 +56,11 @@ rtlsim-all: .check-TB .check-MEM_SIZE .check-DSEG_SIZE .check-TIMEOUT .check-DUM
 	done
 
 #-------------------------------------------------------------------------------
+rtlsim-c: .check-TB .check-TEST .check-MEM_SIZE .check-DSEG_SIZE .check-TIMEOUT .check-DUMPVCD check
+	@../scripts/compile_c_test.sh $(TEST)
+	@../scripts/rtlsim.sh $(TB) $(TEST) $(.FILE_LIST) $(TIMEOUT) $(DUMPVCD)
+
+#-------------------------------------------------------------------------------
 list_asm_tests:
 	@echo -e "--------------------------------------------------------------------------"
 	@echo -e "Available tests under$(.ASM_TESTS_FOLDER):"
