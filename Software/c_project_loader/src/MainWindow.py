@@ -14,8 +14,8 @@ import json
 import fileinput
 import re
 from PyQt5 import QtCore
-from PyQt5.QtSerialPort import QSerialPort as serial
-from PyQt5.QtSerialPort import QSerialPortInfo as portInfo
+import serial.tools.list_ports as list_ports
+import serial
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QIODevice
@@ -285,10 +285,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Get a list of available serial ports.
         """
-        self._availablePorts = portInfo.availablePorts()
+        listPorts = list_ports.comports() # [name, pretty name, info]
         self.comboBoxSerialPort.clear()
-        for port in self._availablePorts:
-            self.comboBoxSerialPort.addItem(port.portName())
+        for port in listPorts:
+            if port[2] != 'n/a':
+                self.comboBoxSerialPort.addItem(port[0])
 
     def openPort(self):
         """

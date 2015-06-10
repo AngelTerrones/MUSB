@@ -10,10 +10,9 @@
 
 import os
 import struct
+import serial
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject
-from PyQt5.QtCore import QIODevice
-from PyQt5.QtSerialPort import QSerialPort as serial
 
 
 class SerialObject(QObject):
@@ -45,19 +44,14 @@ class SerialObject(QObject):
             self.finished.emit()
             return
 
-        port = serial(self)
-        port.setPortName(self._portName)
-        isOpen = port.open(QIODevice.ReadWrite)
+        port = serial.Serial(self._portName, 115200, timeout=5, writeTimeout=5)
+        isOpen = port.isOpen()
         if not isOpen:
             self.message.emit("ERROR:\tUnable to open serial port.\n")
             self.finished.emit()
             return
 
-        port.setBaudRate(serial.Baud115200)
-        port.setDataBits(serial.Data8)
-        port.setParity(serial.NoParity)
-        port.setFlowControl(serial.NoFlowControl)
-
+        # ----------------------------------------------------------------------
         # Read bin file
         try:
             with open(self._binFile, "rb") as file:
@@ -70,6 +64,7 @@ class SerialObject(QObject):
 
         print("Executing boot protocol\n")
 
+        # ----------------------------------------------------------------------
         # Info
         message = "INFO:\tBooting target.\n"
         self.message.emit(message)
@@ -77,86 +72,80 @@ class SerialObject(QObject):
         message = "INFO:\tSize = {} bytes.\n".format(fileSize)
         self.message.emit(message)
 
-        port.clear()
         self.message.emit("INFO:\tPlease, reset target.\n")
 
-        # Get first character
-        dataReady = port.waitForReadyRead(5000)
-        if not dataReady:
+        # ----------------------------------------------------------------------
+        # Get 'USB'
+        dataRx = port.read(3)
+        print(dataRx)
+        if(len(dataRx) < 3):
             port.close()
             self.message.emit("ERROR:\tTarget not detected.\n")
             self.finished.emit()
             return
 
-        # Get start token
         self.message.emit("INFO:\tTarget detected.\n")
-        dataRx = port.readAll()
-        while port.waitForReadyRead(10):
-            dataRx += port.readAll()
-        print(dataRx)
-        if dataRx != b"USB":
+        if dataRx != b'USB':
             port.close()
             self.message.emit("ERROR:\tInvalid start token.\n")
             print(dataRx)
             self.finished.emit()
             return
 
+        # ----------------------------------------------------------------------
         # send ACK
         self.message.emit("INFO:\tStart token received: bootloading.\n")
+        port.write(b'ACK')
 
+        # ----------------------------------------------------------------------
         # send bin size
         binSize = os.path.getsize(self._binFile)
         binSizeWord = int((binSize/4) - 1)
-        # print(binSizeWord, hex(binSizeWord))
         binSizeWord = struct.pack('I', binSizeWord)
-        # print(binSizeWord)
-        # print(binSizeWord[0], binSizeWord[1], binSizeWord[2])
-        port.write(b"ACK" + binSizeWord)
-        port.flush()
-        # port.write(chr(binSizeWord[0]))
-        # port.write(chr(binSizeWord[1]))
-        # port.write(chr(binSizeWord[2]))
+        port.write(binSizeWord)
 
-        # wait for KCA
-        port.waitForReadyRead(500)
-        dataRx = port.readAll()
-        while port.waitForReadyRead(10):
-            dataRx += port.readAll()
-
+        # ----------------------------------------------------------------------
+        # Get 'KCA'
+        dataRx = port.read(3)
         print(dataRx)
-        if dataRx != b"KCA":
+        if dataRx != b'KCA':
             port.close()
             self.message.emit("ERROR:\tBoot protocol error.\n")
+            print(dataRx)
             self.finished.emit()
             return
 
-        # sending bin file
+        # ----------------------------------------------------------------------
+        # Send bin file
         self.message.emit("INFO:\tSending bin file. Please wait.\n")
-        port.flush()
-        bytesTx = port.write(binData)
-        port.flush()
-        port.waitForBytesWritten(500)
+        counter = 0
+        bytesTx = 0
+        while counter < binSize:
+            bytesTx = bytesTx + port.write(bytes([binData[counter]]))
+            counter = counter + 1
+
+        print(bytesTx, binSize)
+
         if bytesTx != binSize:
             port.close()
             message = "ERROR:\tTruncated data. Unable to boot target.\n"
-            print(bytesTx, binSize)
             self.message.emit(message)
             self.finished.emit()
             return
 
-        # wait for ACK
-        port.waitForReadyRead(500)
-        dataRx = port.readAll()
-        while port.waitForReadyRead(10):
-            dataRx += port.readAll()
+        # ----------------------------------------------------------------------
+        # Get 'ACK'
+        dataRx = port.read(3)
         print(dataRx)
-        if dataRx != b"ACK":
+        if dataRx != b'ACK':
             port.close()
             message = "ERROR:\tUnable to boot. Processor in unknown state.\n"
-            self.message.emit(message)
+            print(dataRx)
             self.finished.emit()
             return
 
+        # ----------------------------------------------------------------------
+        # Exit
         port.close()
         self.message.emit("INFO:\tBootloading: DONE.\n")
         self.finished.emit()
