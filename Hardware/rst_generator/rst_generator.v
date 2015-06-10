@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : rst_generator.v
 //  Created On    : 2015-01-07 21:29:23
-//  Last Modified : 2015-05-24 23:16:08
+//  Last Modified : 2015-06-09 21:13:35
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -20,7 +20,7 @@ module rst_generator(
     //--------------------------------------------------------------------------
     // registers
     //--------------------------------------------------------------------------
-    reg [6:0] counter_r;
+    reg [11:0] counter_r;
     reg       rst_i_sync_0;
     reg       rst_i_sync_1;
 
@@ -28,8 +28,10 @@ module rst_generator(
     // Initialization
     //--------------------------------------------------------------------------
     initial begin
-        rst_o     <= 1'b0;
-        counter_r <= 7'b0;
+        rst_o        <= 1'b1;
+        counter_r    <= 12'hFFF;
+        rst_i_sync_0 <= 1'b1;
+        rst_i_sync_1 <= 1'b1;
     end
 
     //--------------------------------------------------------------------------
@@ -42,14 +44,14 @@ module rst_generator(
 
         // Wait until stable input.
         if (rst_o != rst_i_sync_1) begin
-            counter_r <= counter_r + 7'b1;
+            counter_r <= counter_r - 1'b1;
         end
         else begin
-            counter_r <= 7'b0;
+            counter_r <= 12'hFFF;
         end
 
         // Timeout: input signal is stable. Change output.
-        if (counter_r == 7'h7F) begin
+        if (counter_r == 12'h0) begin
             rst_o <= ~rst_o;
         end
         else begin
