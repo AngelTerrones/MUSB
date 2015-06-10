@@ -92,28 +92,20 @@ class SerialObject(QObject):
             self.finished.emit()
             return
 
-        # ----------------------------------------------------------------------
-        # send ACK
         self.message.emit("INFO:\tStart token received: bootloading.\n")
-        port.write(b'ACK')
 
         # ----------------------------------------------------------------------
         # send bin size
         binSize = os.path.getsize(self._binFile)
         binSizeWord = int((binSize/4) - 1)
         binSizeWord = struct.pack('I', binSizeWord)
-        port.write(binSizeWord)
+        port.write(bytes([binSizeWord[0]]))
+        port.write(bytes([binSizeWord[1]]))
+        port.write(bytes([binSizeWord[2]]))
 
         # ----------------------------------------------------------------------
-        # Get 'KCA'
-        dataRx = port.read(3)
-        print(dataRx)
-        if dataRx != b'KCA':
-            port.close()
-            self.message.emit("ERROR:\tBoot protocol error.\n")
-            print(dataRx)
-            self.finished.emit()
-            return
+        # Print echo size
+        print(port.read(3))
 
         # ----------------------------------------------------------------------
         # Send bin file
@@ -121,7 +113,11 @@ class SerialObject(QObject):
         counter = 0
         bytesTx = 0
         while counter < binSize:
-            bytesTx = bytesTx + port.write(bytes([binData[counter]]))
+            byteSend = bytes([binData[counter]])
+            bytesTx = bytesTx + port.write(byteSend)
+            byte = port.read(1)
+            if byte != bytes([binData[counter]]):
+                print("Error {}: {} != {}".format(counter, byte, byteSend))
             counter = counter + 1
 
         print(bytesTx, binSize)
@@ -130,17 +126,6 @@ class SerialObject(QObject):
             port.close()
             message = "ERROR:\tTruncated data. Unable to boot target.\n"
             self.message.emit(message)
-            self.finished.emit()
-            return
-
-        # ----------------------------------------------------------------------
-        # Get 'ACK'
-        dataRx = port.read(3)
-        print(dataRx)
-        if dataRx != b'ACK':
-            port.close()
-            message = "ERROR:\tUnable to boot. Processor in unknown state.\n"
-            print(dataRx)
             self.finished.emit()
             return
 
