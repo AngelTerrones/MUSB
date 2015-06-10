@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : uart_bootloader.v
 //  Created On    : 2015-01-09 22:32:46
-//  Last Modified : 2015-06-09 23:10:47
+//  Last Modified : 2015-06-10 15:21:20
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -69,7 +69,7 @@ module uart_bootloader#(
     // Localparams
     //--------------------------------------------------------------------------
     // FIFO
-    localparam FIFO_ADDR_WIDTH = 8;   // 256 bytes (Rx & Tx. Total: 512)
+    localparam FIFO_ADDR_WIDTH = 10;   // 1024 bytes (Rx & Tx. Total: 512)
 
     // state
     localparam [4:0] IDLE      = 0;   // Waiting
