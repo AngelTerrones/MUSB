@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : tb_core.v
 //  Created On    : 2014-10-02 18:20:53
-//  Last Modified : 2015-06-02 12:41:47
+//  Last Modified : 2015-06-09 21:05:40
 //  Revision      : 0.1
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -66,7 +66,7 @@ module tb_core;
             .dport_enable   ( dport_enable        ),
             // Inputs
             .clk            ( clk_core            ),
-            .rst_i          ( rst                 ),
+            .rst            ( rst                 ),
             .interrupts     ( 5'b0                ),    // No external interrupts.
             .nmi            ( 1'b0                ),    // No external interrupts.
             .iport_data_i   ( iport_data_i[31:0]  ),

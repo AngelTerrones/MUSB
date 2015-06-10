@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musoc.v
 //  Created On    : 2015-01-10 21:18:59
-//  Last Modified : 2015-06-03 10:02:39
+//  Last Modified : 2015-06-09 21:05:55
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -133,7 +133,7 @@ module musoc#(
             .dport_wr       ( master1_wr[3:0]                          ),
             .dport_enable   ( master1_enable                           ),
             .clk            ( clk_core                                 ),
-            .rst_i          ( rst_module | bootloader_reset_core       ),
+            .rst            ( rst_module | bootloader_reset_core       ),
             .interrupts     ( {uart_rx_ready_int, gpio_interrupt[3:0]} ),
             .nmi            ( 1'b0                                     ),
             .iport_data_i   ( master_data_o[31:0]                      ),

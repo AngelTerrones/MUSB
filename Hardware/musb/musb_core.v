@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_core.v
 //  Created On    : 2014-10-01 21:02:38
-//  Last Modified : 2015-06-04 10:11:30
+//  Last Modified : 2015-06-09 21:05:27
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -18,7 +18,7 @@ module musb_core#(
     parameter ENABLE_HW_CLO_Z = 0           // Enable CLO/CLZ instruction
     )(
     input               clk,
-    input               rst_i,
+    input               rst,
     output              halted,             // CP0 Status Register, bit 16
     // Interrupts
     input       [4:0]   interrupts,         // External interrupts
@@ -133,7 +133,6 @@ module musb_core#(
     reg             halt_1;
     reg             halt_2;
     reg             halt_3;
-    reg             rst;
 
     // new signals
     wire            id_mfc0;
@@ -215,10 +214,6 @@ module musb_core#(
 
     assign if_is_bds            = take_branch;
     assign exc_trap             = mem_trap & (mem_trap_condition ^ (mem_alu_result == 32'b0));
-
-    always @(posedge clk) begin
-        rst <= rst_i;
-    end
 
     //------------------------------------------------------------------------------------------------------------------
     // UPDATE: Getting the halt signal from the CP0.
