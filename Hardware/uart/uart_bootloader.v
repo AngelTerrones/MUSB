@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : uart_bootloader.v
 //  Created On    : 2015-01-09 22:32:46
-//  Last Modified : 2015-06-10 15:21:20
+//  Last Modified : 2015-06-10 16:46:45
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -72,29 +72,20 @@ module uart_bootloader#(
     localparam FIFO_ADDR_WIDTH = 10;   // 1024 bytes (Rx & Tx. Total: 512)
 
     // state
-    localparam [4:0] IDLE      = 0;   // Waiting
-    localparam [4:0] INIT1     = 1;   // Send header: U
-    localparam [4:0] INIT2     = 2;   // Send header: S
-    localparam [4:0] INIT3     = 3;   // Send header: B
-    localparam [4:0] ACK1      = 4;   // Wait for ACK: A
-    localparam [4:0] ACK2      = 5;   // Wait for ACK: C
-    localparam [4:0] ACK3      = 6;   // Wait for ACK: K
-    localparam [4:0] SIZE1     = 7;   // Wait for number of words: byte 1
-    localparam [4:0] SIZE2     = 8;   // Wait for number of words: byte 2
-    localparam [4:0] SIZE3     = 9;   // Wait for number of words: byte 3
-    localparam [4:0] ACK4      = 10;  // Wait for ACK: A
-    localparam [4:0] ACK5      = 11;  // Wait for ACK: C
-    localparam [4:0] ACK6      = 12;  // Wait for ACK: K
-    localparam [4:0] DATA1     = 13;  // Wait for data: byte 1
-    localparam [4:0] DATA2     = 14;  // Wait for data: byte 2
-    localparam [4:0] DATA3     = 15;  // Wait for data: byte 3
-    localparam [4:0] DATA4     = 16;  // Wait for data: byte 4
-    localparam [4:0] NEXTADD   = 17;  // Increment address
-    localparam [4:0] ACK7      = 18;  // Wait for ACK: A
-    localparam [4:0] ACK8      = 19;  // Wait for ACK: C
-    localparam [4:0] ACK9      = 20;  // Wait for ACK: K
-    localparam [4:0] DONE      = 21;  // Boot end
-    localparam [4:0] END       = 22;  // Boot end
+    localparam [3:0] IDLE      = 0;   // Waiting
+    localparam [3:0] INIT1     = 1;   // Send header: U
+    localparam [3:0] INIT2     = 2;   // Send header: S
+    localparam [3:0] INIT3     = 3;   // Send header: B
+    localparam [3:0] SIZE1     = 4;   // Wait for number of words: byte 1
+    localparam [3:0] SIZE2     = 5;   // Wait for number of words: byte 2
+    localparam [3:0] SIZE3     = 6;   // Wait for number of words: byte 3
+    localparam [3:0] DATA1     = 7;   // Wait for data: byte 1
+    localparam [3:0] DATA2     = 8;   // Wait for data: byte 2
+    localparam [3:0] DATA3     = 9;   // Wait for data: byte 3
+    localparam [3:0] DATA4     = 10;  // Wait for data: byte 4
+    localparam [3:0] NEXTADD   = 11;  // Increment address
+    localparam [3:0] DONE      = 12;  // Boot end
+    localparam [3:0] END       = 13;  // Boot end
 
     // directions
     localparam [2:0] RX_TX_BUFFER   = 0;                                // base address: In/Out buffer
@@ -136,7 +127,7 @@ module uart_bootloader#(
     //--------------------------------------------------------------------------
     // registers
     //--------------------------------------------------------------------------
-    reg  [ 4:0]      state;
+    reg  [ 3:0]      state;
     reg  [17:0]      rx_count;               // Number of 32-bit words received (boot-loader)
     reg  [17:0]      rx_size;                // Number of 32-bit words to expect (boot-loader)
     reg  [7:0]       uart_data_i_reg;
@@ -219,24 +210,16 @@ module uart_bootloader#(
                 IDLE    : state <= (bootloader_reset_core) ?  INIT1 : IDLE;                                       // Initial state.
                 INIT1   : state <= INIT2;                                                                         // Send U
                 INIT2   : state <= INIT3;                                                                         // Send S
-                INIT3   : state <= ACK1;                                                                          // Send B
-                ACK1    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h41) ? ACK2  : IDLE ) : ((bootloader_reset_core) ? ACK1 : END);    // Receive A
-                ACK2    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h43) ? ACK3  : IDLE ) : ACK2;                                      // Receive C
-                ACK3    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h4B) ? SIZE1 : IDLE ) : ACK3;                                      // Receive K
-                SIZE1   : state <= (uart_data_ready_reg) ? SIZE2 : SIZE1;
+                INIT3   : state <= SIZE1;                                                                         // Send B
+                //ACK1    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h41) ? ACK2  : IDLE ) : ((bootloader_reset_core) ? ACK1 : END);    // Receive A
+                SIZE1   : state <= (uart_data_ready_reg) ? SIZE2 : ((bootloader_reset_core) ? SIZE1 : END);
                 SIZE2   : state <= (uart_data_ready_reg) ? SIZE3 : SIZE2;
-                SIZE3   : state <= (uart_data_ready_reg) ? ACK4 : SIZE3;
-                ACK4    : state <= ACK5;                                                                          // Send ACK
-                ACK5    : state <= ACK6;                                                                          // Send ACK
-                ACK6    : state <= DATA1;                                                                         // Send ACK
+                SIZE3   : state <= (uart_data_ready_reg) ? DATA1 : SIZE3;
                 DATA1   : state <= (uart_data_ready_reg) ? DATA2 : DATA1;
                 DATA2   : state <= (uart_data_ready_reg) ? DATA3 : DATA2;
                 DATA3   : state <= (uart_data_ready_reg) ? DATA4 : DATA3;
                 DATA4   : state <= (uart_data_ready_reg) ? NEXTADD : DATA4;
-                NEXTADD : state <= (boot_master_ready)   ? ((rx_count == rx_size) ? ACK7 : DATA1) : NEXTADD;
-                ACK7    : state <= ACK8;                                                                          // Send ACK
-                ACK8    : state <= ACK9;                                                                          // Send ACK
-                ACK9    : state <= DONE;                                                                          // Send ACK
+                NEXTADD : state <= (boot_master_ready)   ? ((rx_count == rx_size) ? DONE : DATA1) : NEXTADD;
                 DONE    : state <= (uart_tx_count == 0 & tx_free) ? END : DONE;                                  // Wait until Tx buffer is empty
                 END     : state <= END;
                 default : state <= IDLE;
@@ -249,30 +232,21 @@ module uart_bootloader#(
     //--------------------------------------------------------------------------
     always @(*) begin
         case(state)
-            IDLE    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            INIT1   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h55; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // U
-            INIT2   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h53; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // S
-            INIT3   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h42; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // B
-            ACK1    : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b1; boot_rst <= 1'b0; end
-            ACK2    : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            ACK3    : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            SIZE1   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            SIZE2   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            SIZE3   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            ACK4    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h4B; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // K. Inverted for testing.
-            ACK5    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h43; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // C. Inverted for testing.
-            ACK6    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h41; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // A. Inverted for testing.
-            DATA1   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            DATA2   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            DATA3   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            DATA4   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            NEXTADD : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            ACK7    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h41; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // A
-            ACK8    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h43; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // C
-            ACK9    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h4B; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // K
-            DONE    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
-            END     : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b0; end
-            default : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            IDLE    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00;         uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            INIT1   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h55;         uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // U
+            INIT2   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h53;         uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // S
+            INIT3   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h42;         uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // B
+            SIZE1   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= uart_data_out; uart_write_reg <= uart_data_ready_reg; enable_counter <= 1'b1; boot_rst <= 1'b0; end
+            SIZE2   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= uart_data_out; uart_write_reg <= uart_data_ready_reg; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            SIZE3   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= uart_data_out; uart_write_reg <= uart_data_ready_reg; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            DATA1   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= uart_data_out; uart_write_reg <= uart_data_ready_reg; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            DATA2   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= uart_data_out; uart_write_reg <= uart_data_ready_reg; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            DATA3   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= uart_data_out; uart_write_reg <= uart_data_ready_reg; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            DATA4   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= uart_data_out; uart_write_reg <= uart_data_ready_reg; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            NEXTADD : begin uart_read_reg <= 0;                   uart_data_i_reg <= uart_data_out; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            DONE    : begin uart_read_reg <= 0;                   uart_data_i_reg <= uart_data_out; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            END     : begin uart_read_reg <= 0;                   uart_data_i_reg <= uart_data_out; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b0; end
+            default : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00;         uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
         endcase
     end
 

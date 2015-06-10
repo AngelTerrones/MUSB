@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_monitor_soc.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-09 23:27:21
+//  Last Modified : 2015-06-10 16:54:17
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -685,7 +685,7 @@ module musb_monitor_soc(
     always @(posedge clk_bus) begin
         @(negedge uart_rx_idle)
         if (bootloader_rst) begin
-            $display("INFO-MONITOR:\tUART Bootloader Rx='%c'", rx_data);
+            $display("INFO-MONITOR:\tUART Bootloader Rx='%c (%h)'", rx_data, rx_data);
         end
         else begin
             $write("%s", rx_data);
@@ -707,15 +707,6 @@ module musb_monitor_soc(
     initial begin
         uart_tx_enable <= 1'b0;
         @(negedge monitor_rx) // wait for "USB start token"
-        tx_data <= "A";
-        uart_tx_enable <= 1'b1;
-        @(negedge uart_tx_busy)
-        tx_data <= "C";
-        uart_tx_enable <= 1'b1;
-        @(negedge uart_tx_busy)
-        tx_data <= "K";
-        uart_tx_enable <= 1'b1;
-        @(negedge uart_tx_busy)
         // size
         tx_data <= 0;
         uart_tx_enable <= 1'b1;
@@ -738,10 +729,11 @@ module musb_monitor_soc(
         @(negedge uart_tx_busy)
         tx_data <= 8'hDD;
         uart_tx_enable <= 1'b1;
-        $display("ACK done. Now wait...");
+        @(negedge uart_tx_busy)
+        uart_tx_enable <= 1'b0;
+        $display("Boot ok. Now wait...");
     end
     */
-
     //--------------------------------------------------------------------------
     // Start Simulation
     //--------------------------------------------------------------------------
