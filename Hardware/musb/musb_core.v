@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_core.v
 //  Created On    : 2014-10-01 21:02:38
-//  Last Modified : 2015-06-09 21:05:27
+//  Last Modified : 2015-06-10 08:26:34
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -133,6 +133,7 @@ module musb_core#(
     reg             halt_1;
     reg             halt_2;
     reg             halt_3;
+    reg             rst_sync;
 
     // new signals
     wire            id_mfc0;
@@ -218,7 +219,7 @@ module musb_core#(
     //------------------------------------------------------------------------------------------------------------------
     // UPDATE: Getting the halt signal from the CP0.
     always @(posedge clk) begin
-        if (rst) begin
+        if (rst_sync) begin
             halt_1 <= 1'b0;
             halt_2 <= 1'b0;
             halt_3 <= 1'b0;
@@ -230,6 +231,14 @@ module musb_core#(
         end
     end
     assign halted = halt_3;
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Sync the reset signal
+    //------------------------------------------------------------------------------------------------------------------
+    always @(posedge clk) begin
+        rst_sync <= rst;
+    end
+
     //------------------------------------------------------------------------------------------------------------------
     // IF stage (A)
     //--------------------------------------------------------------------------
@@ -249,7 +258,7 @@ module musb_core#(
 
     musb_pc_register AIF_register(
         .clk        ( clk                          ),
-        .rst        ( rst                          ),
+        .rst        ( rst_sync                     ),
         .if_new_pc  ( if_new_pc[31:0]              ),
         .if_stall   ( if_stall | id_stall | halt_0 ),
         .if_pc      ( if_pc[31:0]                  )
@@ -272,7 +281,7 @@ module musb_core#(
         .id_is_flushed      ( id_is_flushed         ),
         // Inputs
         .clk                ( clk                   ),
-        .rst                ( rst                   ),
+        .rst                ( rst_sync              ),
         .if_instruction     ( if_instruction[31:0]  ),
         .if_pc_add4         ( if_pc_add4[31:0]      ),
         .if_pc              ( if_pc[31:0]           ),
@@ -401,7 +410,7 @@ module musb_core#(
         .ex_mem_exception_source    ( ex_mem_exception_source   ),
         // Inputs
         .clk                        ( clk                       ),
-        .rst                        ( rst                       ),
+        .rst                        ( rst_sync                  ),
         .id_alu_operation           ( id_alu_operation[4:0]     ),
         .id_data_rs                 ( id_forward_rs[31:0]       ),
         .id_data_rt                 ( id_forward_rt[31:0]       ),
@@ -444,7 +453,7 @@ module musb_core#(
         )
         musb_alu0(
         .clk                ( clk                   ),
-        .rst                ( rst                   ),
+        .rst                ( rst_sync              ),
         .ex_alu_port_a      ( ex_alu_port_a[31:0]   ),
         .ex_alu_port_b      ( ex_alu_port_b[31:0]   ),
         .ex_alu_operation   ( ex_alu_operation[4:0] ),
@@ -521,7 +530,7 @@ module musb_core#(
         .mem_mem_exception_source   ( mem_mem_exception_source ),
         // Inputs
         .clk                        ( clk                      ),
-        .rst                        ( rst                      ),
+        .rst                        ( rst_sync                 ),
         .ex_alu_result              ( ex_alu_result[31:0]      ),
         .ex_mem_store_data          ( ex_forward_rt[31:0]      ),
         .ex_gpr_wa                  ( ex_gpr_wa[4:0]           ),
@@ -558,7 +567,7 @@ module musb_core#(
         .wb_gpr_we              ( wb_gpr_we             ),
         // Inputs
         .clk                    ( clk                   ),
-        .rst                    ( rst                   ),
+        .rst                    ( rst_sync              ),
         .mem_read_data          ( mem_read_data[31:0]   ),
         .mem_alu_data           ( mem_alu_result[31:0]  ),
         .mem_gpr_wa             ( mem_gpr_wa[4:0]       ),
@@ -636,8 +645,8 @@ module musb_core#(
         .imem_request_stall     ( imem_request_stall       ),
         .dmem_request_stall     ( dmem_request_stall       ),
         // Inputs
-        .clk                    ( clk ),
-        .rst                    ( rst ),
+        .clk                    ( clk                      ),
+        .rst                    ( rst_sync                 ),
         .imem_address           ( if_pc[31:0]              ),
         .dmem_address           ( mem_alu_result[31:0]     ),
         .dmem_data_i            ( mem_mem_store_data[31:0] ),
@@ -688,7 +697,7 @@ module musb_core#(
         .if_stall               ( if_stall               ),
         .id_stall               ( id_stall               ),
         .interrupts             ( interrupts[4:0]        ),
-        .rst                    ( rst                    ),
+        .rst                    ( rst_sync               ),
         .exc_nmi                ( nmi                    ),
         .exc_address_if         ( exc_address_if         ),
         .exc_address_l_mem      ( exc_address_l_mem      ),
