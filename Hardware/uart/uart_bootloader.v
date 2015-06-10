@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : uart_bootloader.v
 //  Created On    : 2015-01-09 22:32:46
-//  Last Modified : 2015-05-24 23:37:05
+//  Last Modified : 2015-06-09 23:10:47
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -144,6 +144,9 @@ module uart_bootloader#(
     reg              uart_read_reg;
     reg              uart_write_reg;
     reg              uart_data_ready_reg;
+    reg              enable_counter;
+    reg              boot_rst;
+
 
     //--------------------------------------------------------------------------
     // wires
@@ -178,18 +181,17 @@ module uart_bootloader#(
             reg  [RANGE-1:0] bootloader_counter;     // Get 1 sec @ BUS_FREQ MHz.
 
             always @(posedge clk) begin
-                bootloader_counter <= (rst) ? {RANGE{1'b0}} : ((bootloader_counter != COUNT_RANGE) ? bootloader_counter + 27'd1 : bootloader_counter);
+                bootloader_counter <= (rst | ~enable_counter) ? {RANGE{1'b0}} : ((bootloader_counter != COUNT_RANGE) ? bootloader_counter + 1'd1 : bootloader_counter);
             end
-
-            assign bootloader_reset_core = (state != END | state == ACK1) & (bootloader_counter != COUNT_RANGE);
+            assign bootloader_reset_core = boot_rst | (enable_counter & (bootloader_counter != COUNT_RANGE));
         end
         else if (SIM_MODE == "SIM") begin
-            reg  [15:0] bootloader_counter;     // Get 1 sec @ BUS_FREQ MHz.
+            reg  [15:0] bootloader_counter;
 
             always @(posedge clk) begin
-                bootloader_counter <= (rst) ? 16'h0000 : ((bootloader_counter != 16'h8000) ? bootloader_counter + 16'd1 : bootloader_counter); // simulation
+                bootloader_counter <= (rst | ~enable_counter) ? 16'h0000 : ((bootloader_counter != 16'h8000) ? bootloader_counter + 16'd1 : bootloader_counter); // simulation
             end
-            assign bootloader_reset_core = (state != END | state == ACK1) & (bootloader_counter != 16'h8000);     // simulation
+            assign bootloader_reset_core = boot_rst | (enable_counter & (bootloader_counter != 16'h8000));     // simulation
         end
     endgenerate
 
@@ -218,24 +220,24 @@ module uart_bootloader#(
                 INIT1   : state <= INIT2;                                                                         // Send U
                 INIT2   : state <= INIT3;                                                                         // Send S
                 INIT3   : state <= ACK1;                                                                          // Send B
-                ACK1    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h41) ? ACK2  : IDLE ) : ACK1;    // Receive A
-                ACK2    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h43) ? ACK3  : IDLE ) : ACK2;    // Receive C
-                ACK3    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h4B) ? SIZE1 : IDLE ) : ACK3;    // Receive K
-                SIZE1   : state <= (uart_data_ready_reg) ? SIZE2                                       : SIZE1;
-                SIZE2   : state <= (uart_data_ready_reg) ? SIZE3                                       : SIZE2;
-                SIZE3   : state <= (uart_data_ready_reg) ? ACK4                                        : SIZE3;
+                ACK1    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h41) ? ACK2  : IDLE ) : ((bootloader_reset_core) ? ACK1 : END);    // Receive A
+                ACK2    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h43) ? ACK3  : IDLE ) : ACK2;                                      // Receive C
+                ACK3    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h4B) ? SIZE1 : IDLE ) : ACK3;                                      // Receive K
+                SIZE1   : state <= (uart_data_ready_reg) ? SIZE2 : SIZE1;
+                SIZE2   : state <= (uart_data_ready_reg) ? SIZE3 : SIZE2;
+                SIZE3   : state <= (uart_data_ready_reg) ? ACK4 : SIZE3;
                 ACK4    : state <= ACK5;                                                                          // Send ACK
                 ACK5    : state <= ACK6;                                                                          // Send ACK
                 ACK6    : state <= DATA1;                                                                         // Send ACK
-                DATA1   : state <= (uart_data_ready_reg) ? DATA2                                       : DATA1;
-                DATA2   : state <= (uart_data_ready_reg) ? DATA3                                       : DATA2;
-                DATA3   : state <= (uart_data_ready_reg) ? DATA4                                       : DATA3;
-                DATA4   : state <= (uart_data_ready_reg) ? NEXTADD                                     : DATA4;
-                NEXTADD : state <= (boot_master_ready)   ? ((rx_count == rx_size) ? ACK7      : DATA1) : NEXTADD;
+                DATA1   : state <= (uart_data_ready_reg) ? DATA2 : DATA1;
+                DATA2   : state <= (uart_data_ready_reg) ? DATA3 : DATA2;
+                DATA3   : state <= (uart_data_ready_reg) ? DATA4 : DATA3;
+                DATA4   : state <= (uart_data_ready_reg) ? NEXTADD : DATA4;
+                NEXTADD : state <= (boot_master_ready)   ? ((rx_count == rx_size) ? ACK7 : DATA1) : NEXTADD;
                 ACK7    : state <= ACK8;                                                                          // Send ACK
                 ACK8    : state <= ACK9;                                                                          // Send ACK
                 ACK9    : state <= DONE;                                                                          // Send ACK
-                DONE    : state <= (uart_tx_count == 0 & tx_free)  ? END                              : DONE;    // Wait until Tx buffer is empty
+                DONE    : state <= (uart_tx_count == 0 & tx_free) ? END : DONE;                                  // Wait until Tx buffer is empty
                 END     : state <= END;
                 default : state <= IDLE;
             endcase
@@ -247,30 +249,30 @@ module uart_bootloader#(
     //--------------------------------------------------------------------------
     always @(*) begin
         case(state)
-            IDLE    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            INIT1   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h55; uart_write_reg <= 1'b1; end     // U
-            INIT2   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h53; uart_write_reg <= 1'b1; end     // S
-            INIT3   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h42; uart_write_reg <= 1'b1; end     // B
-            ACK1    : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            ACK2    : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            ACK3    : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            SIZE1   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            SIZE2   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            SIZE3   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            ACK4    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h4B; uart_write_reg <= 1'b1; end     // K. Inverted for testing.
-            ACK5    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h43; uart_write_reg <= 1'b1; end     // C. Inverted for testing.
-            ACK6    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h41; uart_write_reg <= 1'b1; end     // A. Inverted for testing.
-            DATA1   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            DATA2   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            DATA3   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            DATA4   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            NEXTADD : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            ACK7    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h41; uart_write_reg <= 1'b1; end     // A
-            ACK8    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h43; uart_write_reg <= 1'b1; end     // C
-            ACK9    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h4B; uart_write_reg <= 1'b1; end     // K
-            DONE    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            END     : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
-            default : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; end
+            IDLE    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            INIT1   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h55; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // U
+            INIT2   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h53; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // S
+            INIT3   : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h42; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // B
+            ACK1    : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b1; boot_rst <= 1'b0; end
+            ACK2    : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            ACK3    : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            SIZE1   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            SIZE2   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            SIZE3   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            ACK4    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h4B; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // K. Inverted for testing.
+            ACK5    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h43; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // C. Inverted for testing.
+            ACK6    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h41; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // A. Inverted for testing.
+            DATA1   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            DATA2   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            DATA3   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            DATA4   : begin uart_read_reg <= uart_data_ready_reg; uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            NEXTADD : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            ACK7    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h41; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // A
+            ACK8    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h43; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // C
+            ACK9    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h4B; uart_write_reg <= 1'b1; enable_counter <= 1'b0; boot_rst <= 1'b1; end     // K
+            DONE    : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
+            END     : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b0; end
+            default : begin uart_read_reg <= 0;                   uart_data_i_reg <= 8'h00; uart_write_reg <= 1'b0; enable_counter <= 1'b0; boot_rst <= 1'b1; end
         endcase
     end
 
@@ -303,7 +305,12 @@ module uart_bootloader#(
     // Handle data count
     //--------------------------------------------------------------------------
     always @(posedge clk) begin
-        rx_count <= (state == IDLE) ? 18'h00000 : (((state == NEXTADD) & boot_master_ready) ? rx_count + 18'b1 : rx_count);
+        if (rst) begin
+            rx_count <= 18'b0;
+        end
+        else begin
+            rx_count <= (state == IDLE) ? 18'h00000 : (((state == NEXTADD) & boot_master_ready) ? rx_count + 18'b1 : rx_count);
+        end
     end
 
     always @(posedge clk) begin
@@ -326,7 +333,7 @@ module uart_bootloader#(
             case (uart_address[2])
                 1'b0    : begin uart_data_o <= {uart_rx_count[7:0], uart_tx_count[15:0], uart_data_out}; uart_ready <= 1'b1; end
                 1'b1    : begin uart_data_o <= {24'b0, uart_rx_count[15:8]};                             uart_ready <= 1'b1; end
-                default : begin uart_data_o <= 32'hDEAD_F00D;                                            uart_ready <= 1'b1; end
+                default : begin uart_data_o <= 32'hx;                                                    uart_ready <= 1'b1; end
             endcase
         end
         else if (uart_wr & uart_enable & ~bootloader_reset_core) begin
