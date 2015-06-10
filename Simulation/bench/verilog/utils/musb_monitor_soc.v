@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_monitor_soc.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-09 16:07:56
+//  Last Modified : 2015-06-09 23:27:21
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -706,7 +706,7 @@ module musb_monitor_soc(
 
     initial begin
         uart_tx_enable <= 1'b0;
-        @(negedge rst)
+        @(negedge monitor_rx) // wait for "USB start token"
         tx_data <= "A";
         uart_tx_enable <= 1'b1;
         @(negedge uart_tx_busy)
