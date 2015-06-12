@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : uart_bootloader.v
 //  Created On    : 2015-01-09 22:32:46
-//  Last Modified : 2015-06-10 16:46:45
+//  Last Modified : 2015-06-11 19:59:33
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -15,15 +15,14 @@
 //                  ------------------------------
 //                  The protocol is over a COM (serial) port, 115200 bauds, 8N1, no parity.
 //
-//                  1. At reset, the target/bootloader sends "USB". The Master Reset is asserted by this module.
-//                  2. The programmer/uploader sends "ACK" token, starting the boot protocol, with timeout of 1 second.
+//                  1. At reset, the target/UART-bootloader sends "USB". The Master Reset is asserted by this module.
+//                  2. The programmer/uploader sends the size, in words, of the bin file, minus 1., with timeout of 1 second.
 //                     After 1 second, it will release the Master Reset, and enter Slave Mode.
-//                  3. The programmer/uploader sends the size, in words, of the bin file, minus 1.
 //                     This size is 18-bits (3 bytes). The size is sent from low-order to high-order bytes (Little-Endian).
-//                  4. The target responds with "KCA", to acknowledge the size.
-//                  5. The programmer/uploader sends the bin file (data).
-//                  6. The target sends "ACK"
-//                  7. The target boots from memory
+//                  4. The target echoes the 3 bytes received, to confirm that the bootloader is listening.
+//                  5. The programmer/uploader sends the bin file (data). The target will echo each byte to confirm
+//                     proper functioning.
+//                  7. The target boots from memory when the last byteis received.
 //
 //                  Slave UART. Register address:
 //                  ----------------------------
@@ -32,7 +31,7 @@
 //                  Tx count    = 0x01 & 0x02     | Counter = [0, 2^FIFO_ADDR_WIDTH], so it needs 2 bytes (maximum)
 //                  Rx count    = 0x03 & 0x04     | Counter = [0, 2^FIFO_ADDR_WIDTH], so it needs 2 bytes (maximum)
 //
-//                  Tx and Rx use independent FIFO buffers (Default implementation: 256 bytes each one)
+//                  Tx and Rx use independent FIFO buffers (Default implementation: 1024 bytes each one)
 //==================================================================================================
 
 module uart_bootloader#(
@@ -69,7 +68,7 @@ module uart_bootloader#(
     // Localparams
     //--------------------------------------------------------------------------
     // FIFO
-    localparam FIFO_ADDR_WIDTH = 10;   // 1024 bytes (Rx & Tx. Total: 512)
+    localparam FIFO_ADDR_WIDTH = 10;   // 1024 bytes (Rx & Tx. Total: 2048)
 
     // state
     localparam [3:0] IDLE      = 0;   // Waiting
@@ -138,7 +137,6 @@ module uart_bootloader#(
     reg              enable_counter;
     reg              boot_rst;
 
-
     //--------------------------------------------------------------------------
     // wires
     //--------------------------------------------------------------------------
@@ -165,7 +163,7 @@ module uart_bootloader#(
     // SIM_MODE == "NONE"
     //      Disable boot for 1 sec, waiting for boot
     // SIM_MODE == "SIM"
-    //      Send USB, wait 256 cycles, enable boot
+    //      Disable boot for 0x8000 cycles, enable boot
     //--------------------------------------------------------------------------
     generate
         if (SIM_MODE == "NONE") begin
@@ -187,7 +185,7 @@ module uart_bootloader#(
     endgenerate
 
     //--------------------------------------------------------------------------
-    // Register the data_ready signal
+    // Register the data_ready signal (from UART-min)
     //--------------------------------------------------------------------------
     always @(posedge clk ) begin
         if (rst) begin
@@ -211,7 +209,6 @@ module uart_bootloader#(
                 INIT1   : state <= INIT2;                                                                         // Send U
                 INIT2   : state <= INIT3;                                                                         // Send S
                 INIT3   : state <= SIZE1;                                                                         // Send B
-                //ACK1    : state <= (uart_data_ready_reg) ? ( (uart_data_out == 8'h41) ? ACK2  : IDLE ) : ((bootloader_reset_core) ? ACK1 : END);    // Receive A
                 SIZE1   : state <= (uart_data_ready_reg) ? SIZE2 : ((bootloader_reset_core) ? SIZE1 : END);
                 SIZE2   : state <= (uart_data_ready_reg) ? SIZE3 : SIZE2;
                 SIZE3   : state <= (uart_data_ready_reg) ? DATA1 : SIZE3;
@@ -294,13 +291,13 @@ module uart_bootloader#(
     end
 
     //--------------------------------------------------------------------------
-    // Handle R to this module (Slave mode)
+    // Handle R/W to this module (Slave mode)
     // Only if boot-loader mode == 0
     // The core reads words (ALWAYS), so we need to concatenate the registers.
     // Search for a better way to do this.
     //--------------------------------------------------------------------------
-    assign uart_tx_count[15:FIFO_ADDR_WIDTH+1] = 0;  // clear the remaining bytes.
-    assign uart_rx_count[15:FIFO_ADDR_WIDTH+1] = 0;  // clear the remaining bytes.
+    assign uart_tx_count[15:FIFO_ADDR_WIDTH+1] = 0;  // clear the remaining bytes. 2^FIFO_ADDR_WIDTH requires FIFO_ADDR_WIDTH + 1 bits
+    assign uart_rx_count[15:FIFO_ADDR_WIDTH+1] = 0;  // clear the remaining bytes. 2^FIFO_ADDR_WIDTH requires FIFO_ADDR_WIDTH + 1 bits
 
     always @(posedge clk) begin
         if (~uart_wr & uart_enable & ~bootloader_reset_core) begin
@@ -331,19 +328,19 @@ module uart_bootloader#(
         .BUS_FREQ        (BUS_FREQ)
         )
         uart(
-        .clk                ( clk                         ),
-        .rst                ( rst                         ),
-        .write              ( uart_write                  ),
-        .data_i             ( uart_data_in[7:0]           ),
-        .read               ( uart_read                   ),
-        .data_o             ( uart_data_out[7:0]          ),
-        .data_ready         ( uart_data_ready             ),
+        .clk                ( clk                              ),
+        .rst                ( rst                              ),
+        .write              ( uart_write                       ),
+        .data_i             ( uart_data_in[7:0]                ),
+        .read               ( uart_read                        ),
+        .data_o             ( uart_data_out[7:0]               ),
+        .data_ready         ( uart_data_ready                  ),
         .rx_count           ( uart_rx_count[FIFO_ADDR_WIDTH:0] ),
         .tx_count           ( uart_tx_count[FIFO_ADDR_WIDTH:0] ),
-        .tx_free            ( tx_free                     ),
-        .uart_rx_ready_int  ( uart_rx_ready_int           ),
-        .uart_rx_full_int   ( uart_rx_full_int            ),
-        .uart_rx            ( uart_rx                     ),
-        .uart_tx            ( uart_tx                     )
+        .tx_free            ( tx_free                          ),
+        .uart_rx_ready_int  ( uart_rx_ready_int                ),
+        .uart_rx_full_int   ( uart_rx_full_int                 ),
+        .uart_rx            ( uart_rx                          ),
+        .uart_tx            ( uart_tx                          )
         );
 endmodule
