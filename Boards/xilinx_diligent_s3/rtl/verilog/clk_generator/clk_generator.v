@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : clk_generator.v
 //  Created On    : 2015-02-07 21:17:35
-//  Last Modified : 2015-05-28 09:59:41
+//  Last Modified : 2015-06-12 13:27:11
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -24,7 +24,7 @@ module clk_generator(
     // localparams
     //--------------------------------------------------------------------------
     localparam real    BASE_FREQ = 50.0;    // Input frequency in MHz
-    localparam integer CLK_MULT  = 4;       // Frequency multiplier (FX)
+    localparam integer CLK_MULT  = 2;       // Frequency multiplier (FX)
     localparam integer CLK_DIV   = 2;       // Frequency divider (FX)
     localparam integer CLK_DV    = 2;       // Frequency divider (DV)
 

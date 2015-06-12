@@ -34,6 +34,7 @@ RTL_FOLDER=$1
 ARBITER=$RTL_FOLDER/arbiter
 FIFO=$RTL_FOLDER/fifo
 GPIO=$RTL_FOLDER/gpio
+IO_CELL=$RTL_FOLDER/io_cell
 MUSB=$RTL_FOLDER/musb
 MUX_SWITCH=$RTL_FOLDER/mux_switch
 RAM=$RTL_FOLDER/ram
@@ -44,7 +45,7 @@ CLK_GEN=$2/verilog/clk_generator
 MEMORY=$2/verilog/memory
 MUSOC=$2/verilog/musoc
 
-MODULES="$ARBITER $FIFO $GPIO $MUSB $MUX_SWITCH $RAM $RST_GEN $UART $CLK_GEN $MEMORY $MUSOC"
+MODULES="$ARBITER $FIFO $GPIO $IO_CELL $MUSB $MUX_SWITCH $RAM $RST_GEN $UART $CLK_GEN $MEMORY $MUSOC"
 
 #-------------------------------------------------------------------------------
 # File project

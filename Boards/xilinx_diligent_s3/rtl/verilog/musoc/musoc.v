@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musoc.v
 //  Created On    : 2015-01-10 21:18:59
-//  Last Modified : 2015-06-04 13:47:42
+//  Last Modified : 2015-06-12 14:40:40
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -30,9 +30,7 @@ module musoc#(
     input           rst,
     output          halted,
     // GPIO
-    input   [31:0]  gpio_i,
-    output  [31:0]  gpio_o,
-    output  [31:0]  gpio_oe,
+    inout   [31:0]  gpio_inout,
     // UART
     input           uart_rx,
     output          uart_tx
@@ -88,6 +86,10 @@ module musoc#(
     wire            ms_ready;
     wire            ms_error;
 
+    wire    [31:0]  gpio_o;
+    wire    [31:0]  gpio_oe;
+    wire    [31:0]  gpio_i;
+
     wire    [3:0]   gpio_interrupt;
     wire            uart_rx_ready_int;
     wire            bootloader_reset_core;
@@ -133,7 +135,7 @@ module musoc#(
             .dport_wr       ( master1_wr[3:0]                          ),
             .dport_enable   ( master1_enable                           ),
             .clk            ( clk_core                                 ),
-            .rst_i          ( rst_module | bootloader_reset_core       ),
+            .rst            ( rst_module | bootloader_reset_core       ),
             .interrupts     ( {uart_rx_ready_int, gpio_interrupt[3:0]} ),
             .nmi            ( 1'b0                                     ),
             .iport_data_i   ( master_data_o[31:0]                      ),
@@ -262,4 +264,15 @@ module musoc#(
             .uart_rx               ( uart_rx               ),
             .uart_tx               ( uart_tx               )
         );
+
+    io_cell #(
+        .WIDTH(32)
+        )
+        io_cell0(
+            .io_pad ( gpio_inout    ),
+            .data_o ( gpio_o[31:0]  ),
+            .oe     ( gpio_oe[31:0] ),
+            .data_i ( gpio_i[31:0]  )
+        );
+
 endmodule

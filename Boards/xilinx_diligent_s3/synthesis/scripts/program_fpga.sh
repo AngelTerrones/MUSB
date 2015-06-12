@@ -44,7 +44,7 @@ cd $3
 # copy impact script & update
 #-------------------------------------------------------------------------------
 cp ../scripts/impact_program_fpga.batch .
-sed -i "s/BITSTREAM_NAME/$1/g" ./impact_program_fpga.batch
+sed -i "s/PROM_NAME/$1/g" ./impact_program_fpga.batch
 
 #-------------------------------------------------------------------------------
 # Program FPGA
