@@ -15,10 +15,8 @@ import fileinput
 import re
 from PyQt5 import QtCore
 import serial.tools.list_ports as list_ports
-import serial
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import QIODevice
 from Ui_MainWindow import Ui_MainWindow
 from SerialObject import SerialObject
 
@@ -36,13 +34,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def __init__(self):
         super(MainWindow, self).__init__()
-        self._openPort = False
         self._serialThread = QtCore.QThread()
         self._serialObject = SerialObject()
+        self._booting = False
         self._serialObject.moveToThread(self._serialThread)
         self._setupUi()
-        self._connectSignalSlots()
         self.loadSerialPorts()
+        self._connectSignalSlots()
+
+    def closeEvent(self, event):
+        """
+        Close event.
+        """
+        if self._booting:
+            title = "Exit program"
+            message = "Aborting boot."
+            QMessageBox.critical(self, title, message)
 
     def _setupUi(self):
         """
@@ -76,7 +83,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def createProjectFolders(self, path):
         """
         Create the project folder, and the 'src' folder.
-        If the folder exists, give and error and abort procedure.
+        If the *.pro file exists inside the folder, return False
         """
         name = os.path.basename(path)
         projectFile = "{}/{}.pro".format(path, name)
@@ -91,16 +98,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def createProjectFiles(self, path):
         """
         Create the project files:
-        - main.c:       obvious.
-        - boot.s:       startup code.
-        - exception.s:  basic exception code
-        - linker.ls:    basic linker file
-        - makefile:     project makefile. Compiles the project, and generates
-                        a listing file, an hex file for RTL simulation, and
-                        a bin file for target programing.
+        - src/main.c:       obvious.
+        - src/boot.s:       startup code.
+        - src/exception.s:  basic exception code
+        - linker.ls:        basic linker file
+        - makefile:         project makefile. Compiles the project, and
+                            generates a listing file, an hex file for RTL
+                            simulation, and a bin file for target programing.
         """
         srcFolder = path + "/src"
-        templateFolder = "../../templates"
+        templateFolder = "../../templates"  # relative to this folder.
         # copy files to src directory
         shutil.copy(templateFolder + "/main_c_template", srcFolder + "/main.c")
         shutil.copy(templateFolder + "/boot_template", srcFolder + "/boot.s")
@@ -202,7 +209,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         projectData = json.loads(jsonString)
         optimizationLevel = projectData["Optimization Level"]
-
         self.comboBoxOptimization.setCurrentIndex(optimizationLevel)
         self.lineEditMemorySize.setText(str(projectData["Memory Size"]))
         self.lineEditDataSegSize.setText(str(projectData["Data Segment Size"]))
@@ -285,45 +291,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Get a list of available serial ports.
         """
-        listPorts = list_ports.comports() # [name, pretty name, info]
         self.comboBoxSerialPort.clear()
+
+        try:
+            listPorts = list_ports.comports()  # [name, pretty name, info]
+        except:
+            print("ERROR: Can't get com ports.")
+            return
+
+        # Hide ports with no info
         for port in listPorts:
             if port[2] != 'n/a':
                 self.comboBoxSerialPort.addItem(port[0])
-
-    def openPort(self):
-        """
-        Open the selected serial port
-        """
-
-        portName = self.comboBoxSerialPort.currentText()
-        self._serialPort.setPortName(portName)
-
-        if not self._openPort:
-            self._openPort = self._serialPort.open(QIODevice.ReadWrite)
-
-            if not self._openPort:
-                title = "Boot error"
-                error = self._serialPort.error()
-                message = "Unable to open serial port.\n"
-                message = message + "Error code: {}".format(error)
-                QMessageBox.critical(self, title, message)
-                return
-
-            self._serialPort.setBaudRate(serial.Baud115200)
-            self._serialPort.setDataBits(serial.Data8)
-            self._serialPort.setParity(serial.NoParity)
-            self._serialPort.setFlowControl(serial.NoFlowControl)
-
-            self.pushButtonOpenPort.setText("&Close")
-            self.pushButtonReload.setDisabled(True)
-            self.comboBoxSerialPort.setDisabled(True)
-        else:
-            self._serialPort.close()
-            self.pushButtonOpenPort.setText("&Open")
-            self.pushButtonReload.setEnabled(True)
-            self.comboBoxSerialPort.setEnabled(True)
-            self._openPort = False
 
     def selectBinFile(self):
         """
@@ -335,7 +314,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         filterText = "MUSB binary file (*.bin)"
         binFile = QFileDialog.getOpenFileName(self, title, path + "/bin",
                                               filterText)
-        # binFile is a tuple. The filename is the first one
+        # binFile is a tuple. The filename is the first item
         if binFile[0] is "":
             return
 
@@ -343,7 +322,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def bootTarget(self):
         """
-        Send the bin file to target
+        Starts the serial thread.
         """
         binFile = self.lineEditBinFile.text()
         if not os.path.exists(binFile):
@@ -359,16 +338,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._serialObject.setPortName(portName)
         self._serialObject.setBinFile(binFile)
         self._serialThread.start()
+        self._booting = True
 
     def bootThreadFinished(self):
         """
-        The thread finished
+        Enable the boot pushbutton when the serial thread
+        finish its execution.
         """
         self.pushButtonBoot.setEnabled(True)
+        self._booting = False
 
     def insertMessage(self, message):
         """
-        Print a message
+        Insert message in the text log
         """
         self.textEdit.insertPlainText(message)
 

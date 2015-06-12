@@ -33,6 +33,23 @@ class SerialObject(QObject):
         """
         Executes the boot protocol
         Callback for thread's started signal.
+
+        MUSB Boot Protocol Description:
+
+        The protocol is over a COM (serial) port, 115200 bauds, 8N1, no parity.
+        1. At reset, the target/UART-bootloader sends "USB". The Master Reset
+           is asserted by this module.
+        2. The programmer/uploader sends the size, in words, of the bin file,
+           minus 1, with timeout of 1 second. After 1 second, it will release
+           the Master Reset, and enter Slave Mode.
+           The size is 18-bits (3 bytes). The size is sent from low-order to
+           high-order bytes (Little-Endian).
+        4. The target echoes the 3 bytes received, to confirm that the
+           bootloader is listening.
+        5. The programmer/uploader sends the bin file (data). The target will
+           echo each byte to confirm
+           proper functioning.
+        7. The target boots from memory when the last byteis received.
         """
         if self._portName is None:
             self.message.emit("ERROR:\tUnable to access the serial port.\n")
@@ -44,8 +61,18 @@ class SerialObject(QObject):
             self.finished.emit()
             return
 
-        port = serial.Serial(self._portName, 115200, timeout=5, writeTimeout=5)
+        try:
+            port = serial.Serial(self._portName, 115200, timeout=5,
+                                 writeTimeout=5)
+        except Exception as e:
+            print(e)
+            print("Unable to open serial port {}".format(self._portName))
+            self.message.emit("ERROR:\tUnable to open serial port.\n")
+            self.finished.emit()
+            return
+
         isOpen = port.isOpen()
+        print(isOpen)
         if not isOpen:
             self.message.emit("ERROR:\tUnable to open serial port.\n")
             self.finished.emit()
@@ -86,9 +113,9 @@ class SerialObject(QObject):
 
         self.message.emit("INFO:\tTarget detected.\n")
         if dataRx != b'USB':
+            print(dataRx)
             port.close()
             self.message.emit("ERROR:\tInvalid start token.\n")
-            print(dataRx)
             self.finished.emit()
             return
 
@@ -104,8 +131,14 @@ class SerialObject(QObject):
         port.write(bytes([binSizeWord[2]]))
 
         # ----------------------------------------------------------------------
-        # Print echo size
-        print(port.read(3))
+        # Check echo size
+        echoSize = port.read(3)
+        if echoSize != binSizeWord[0:3]:
+            print(echoSize)
+            port.close()
+            self.message.emit("ERROR:\tWrong echo (size).\n")
+            self.finished.emit()
+            return
 
         # ----------------------------------------------------------------------
         # Send bin file
@@ -117,12 +150,14 @@ class SerialObject(QObject):
             bytesTx = bytesTx + port.write(byteSend)
             byte = port.read(1)
             if byte != bytes([binData[counter]]):
-                print("Error {}: {} != {}".format(counter, byte, byteSend))
+                message = "ERROR:\tError {}: {} != {}".format(counter, byte,
+                                                              byteSend)
+                print(message)
+                self.message.emit(message)
             counter = counter + 1
 
-        print(bytesTx, binSize)
-
         if bytesTx != binSize:
+            print(bytesTx, binSize)
             port.close()
             message = "ERROR:\tTruncated data. Unable to boot target.\n"
             self.message.emit(message)
@@ -142,4 +177,7 @@ class SerialObject(QObject):
         self._binFile = binFile
 
     def setPortName(self, portName):
+        """
+        Set the serial port to use.
+        """
         self._portName = portName
