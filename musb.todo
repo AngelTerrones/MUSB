@@ -24,9 +24,7 @@ MUSB:
         Synthesys:
             Nothing to be done.
         Tesbenchs:
-            [ ] Basic wave settings.
-            [ ] Check if the test is OK.
-            [ ] Make C tests. Buscar forma de probar que el test ejecutó en forma correcta.
+            Nothing to be done.
         Software and library:
             [ ] Make library.
         Utils:
@@ -62,6 +60,9 @@ MUSB:
             [ ] Write wiki (export manual).
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ [-] Basic wave settings. @cancelled (15-06-11 19:59) @project(Release 1.1 / Tesbenchs)
+ [-] Check if the test is OK. @cancelled (15-06-11 19:59) @project(Release 1.1 / Tesbenchs)
+ [x] Make C tests. @done (15-06-11 11:03) @project(Release 1.1 / Tesbenchs)
  [-] Populate UCF file: use all pins and set unused to GND (using iobuf). @cancelled (15-06-08 01:30) @project(Release 1.1 / Synthesys)
  [x] Optimization (reduce area). @done (15-06-07 15:36) @project(Release 1.1 / MIPS core)
  [x] Make loader: python + Qt @done (15-06-07 15:35) @project(Release 1.1 / Utils)
