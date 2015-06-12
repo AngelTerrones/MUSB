@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_monitor_soc.v
 //  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-10 16:54:17
+//  Last Modified : 2015-06-12 11:54:32
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -668,7 +668,7 @@ module musb_monitor_soc(
             monitor_gpio_o <= 32'b0;
         end
         else begin
-            monitor_gpio_o <= {16'b0, monitor_gpio_i[31:16]};
+            monitor_gpio_o <= monitor_gpio_o + 32'h01010101;
         end
     end
 
