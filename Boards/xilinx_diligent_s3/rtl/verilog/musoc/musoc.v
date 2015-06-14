@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musoc.v
 //  Created On    : 2015-01-10 21:18:59
-//  Last Modified : 2015-06-12 14:40:40
+//  Last Modified : 2015-06-14 11:55:47
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -239,6 +239,9 @@ module musoc#(
         .gpio_enable    ( slave1_enable       )
     );
 
+    //--------------------------------------------------------------------------
+    // UART/Bootloader
+    //--------------------------------------------------------------------------
     uart_bootloader #(
         .SIM_MODE        ( SIM_MODE        ),   // Simulation Mode
         .BUS_FREQ        ( BUS_FREQ        )    // Bus frequency
@@ -265,6 +268,9 @@ module musoc#(
             .uart_tx               ( uart_tx               )
         );
 
+    //--------------------------------------------------------------------------
+    // Tri-state buffer
+    //--------------------------------------------------------------------------
     io_cell #(
         .WIDTH(32)
         )
