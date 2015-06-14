@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'Ui/MainWindow.ui'
 #
-# Created: Mon Jun  8 12:29:11 2015
+# Created: Sun Jun 14 11:31:13 2015
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -224,7 +224,7 @@ class Ui_MainWindow(object):
         self.label_4.setText(_translate("MainWindow", "Location"))
         self.lineEditCompilerPath.setText(_translate("MainWindow", "/opt/mgc/embedded/codebench"))
         self.lineEditCompilerPath.setPlaceholderText(_translate("MainWindow", "<if not in path>"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Project"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "&Project"))
         self.groupBox_7.setTitle(_translate("MainWindow", "Serial Port"))
         self.pushButtonReload.setText(_translate("MainWindow", "&Reload"))
         self.groupBox_6.setTitle(_translate("MainWindow", "Bin File"))
@@ -233,6 +233,6 @@ class Ui_MainWindow(object):
         self.pushButtonBoot.setText(_translate("MainWindow", "&Boot"))
         self.groupBox_5.setTitle(_translate("MainWindow", "Console"))
         self.pushButtonClear.setText(_translate("MainWindow", "&Clear"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Bootloader"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "&Bootloader"))
         self.labelIcon.setText(_translate("MainWindow", "Insert Logo"))
 
