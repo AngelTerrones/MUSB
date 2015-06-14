@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : gpio.v
 //  Created On    : 2015-01-02 19:44:15
-//  Last Modified : 2015-06-09 18:16:00
+//  Last Modified : 2015-06-14 10:04:22
 //  Revision      :
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -41,7 +41,7 @@ module gpio(
     input       [3:0]   gpio_wr,        // Byte select
     input               gpio_enable,    // Enable operation
     output  reg [31:0]  gpio_o,         // Output port
-    output  reg [31:0]  gpio_oe,        // Output enable
+    output      [31:0]  gpio_oe,        // Output enable
     output  reg [31:0]  gpio_data_o,    // Data to bus
     output  reg         gpio_ready,     // Ready operation
     output  reg [3:0]   gpio_interrupt  // Active interrupt
@@ -65,17 +65,19 @@ module gpio(
     //--------------------------------------------------------------------------
     reg     [31:0]  gpio_data_reg_i;                                                // input data register
     reg     [31:0]  gpio_data_reg_sync_i;                                           // sync register
+    reg     [31:0]  gpio_dd;
     reg     [31:0]  gpio_ie;                                                        // interrupt enable
     reg     [31:0]  gpio_ep;                                                        // edge polarity
 
     //--------------------------------------------------------------------------
     // Assignments
     //--------------------------------------------------------------------------
-    assign enable_write      = gpio_enable & ~gpio_ready & (gpio_wr != 4'b0000);    // Enable if Valid operation, and write at least one byte
-    assign enable_read       = gpio_enable & ~gpio_ready & (gpio_wr == 4'b0000);
+    assign gpio_oe           = gpio_dd;
+    assign enable_write      = gpio_enable & ~gpio_ready & (|gpio_wr);    // Enable if Valid operation, and write at least one byte
+    assign enable_read       = gpio_enable & ~gpio_ready & ~(|gpio_wr);
     assign address           = gpio_address[31:2];
-    assign posedge_interrupt = (gpio_data_reg_sync_i & ~gpio_data_reg_i) & gpio_ep  & gpio_ie & ~gpio_oe;  // detect and enable
-    assign negedge_interrupt = (~gpio_data_reg_sync_i & gpio_data_reg_i) & ~gpio_ep & gpio_ie & ~gpio_oe; // detect and enable
+    assign posedge_interrupt = (gpio_data_reg_sync_i & ~gpio_data_reg_i) & gpio_ep  & gpio_ie & ~gpio_dd;  // detect and enable
+    assign negedge_interrupt = (~gpio_data_reg_sync_i & gpio_data_reg_i) & ~gpio_ep & gpio_ie & ~gpio_dd; // detect and enable
 
     // or all the signals, and combine posedge and negedge interrupts
     assign int_port_a = (|posedge_interrupt[7:0])   | (|negedge_interrupt[7:0])  ;
@@ -112,55 +114,92 @@ module gpio(
     end
 
     //--------------------------------------------------------------------------
-    // write registers
+    // Set data output
     //--------------------------------------------------------------------------
     always @(posedge clk) begin
         if (rst) begin
-            gpio_o          <= 32'b0;
-            gpio_oe         <= 32'b0;
-            gpio_ie         <= 32'b0;
-            gpio_ep         <= 32'b0;
-            gpio_interrupt  <= 4'b0;
+            gpio_o <= 32'b0;
         end
-        else if (enable_write) begin
-            case(address[`GPIO_ADDR_RANGE])
-                `GPIO_PD:   begin
-                                gpio_o[7:0]   <= (gpio_wr[0]) ? gpio_data_i[7:0]   : gpio_o[7:0];
-                                gpio_o[15:8]  <= (gpio_wr[1]) ? gpio_data_i[15:8]  : gpio_o[15:8];
-                                gpio_o[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_o[23:16];
-                                gpio_o[31:24] <= (gpio_wr[3]) ? gpio_data_i[31:24] : gpio_o[31:24];
-                            end
-                `GPIO_DD:   begin
-                                gpio_oe[7:0]   <= (gpio_wr[0]) ? gpio_data_i[7:0]   : gpio_oe[7:0];
-                                gpio_oe[15:8]  <= (gpio_wr[1]) ? gpio_data_i[15:8]  : gpio_oe[15:8];
-                                gpio_oe[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_oe[23:16];
-                                gpio_oe[31:24] <= (gpio_wr[3]) ? gpio_data_i[31:24] : gpio_oe[31:24];
-                            end
-                `GPIO_IE:   begin
-                                gpio_ie[7:0]   <= (gpio_wr[0]) ? gpio_data_i[7:0]   : gpio_ie[7:0];
-                                gpio_ie[15:8]  <= (gpio_wr[1]) ? gpio_data_i[15:8]  : gpio_ie[15:8];
-                                gpio_ie[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_ie[23:16];
-                                gpio_ie[31:24] <= (gpio_wr[3]) ? gpio_data_i[31:24] : gpio_ie[31:24];
-                            end
-                `GPIO_EP:   begin
-                                gpio_ep[7:0]   <= (gpio_wr[0]) ? gpio_data_i[7:0]   : gpio_ep[7:0];
-                                gpio_ep[15:8]  <= (gpio_wr[1]) ? gpio_data_i[15:8]  : gpio_ep[15:8];
-                                gpio_ep[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_ep[23:16];
-                                gpio_ep[31:24] <= (gpio_wr[3]) ? gpio_data_i[31:24] : gpio_ep[31:24];
-                            end
-                `GPIO_IC:   begin
-                                gpio_interrupt[0] <= (gpio_wr[0]) ? 1'b0 : int_port_a | gpio_interrupt[0];
-                                gpio_interrupt[1] <= (gpio_wr[1]) ? 1'b0 : int_port_b | gpio_interrupt[1];
-                                gpio_interrupt[2] <= (gpio_wr[2]) ? 1'b0 : int_port_c | gpio_interrupt[2];
-                                gpio_interrupt[3] <= (gpio_wr[3]) ? 1'b0 : int_port_d | gpio_interrupt[3];
-                            end
-            endcase
+        else if(enable_write & (address[`GPIO_ADDR_RANGE] == `GPIO_PD)) begin
+            gpio_o[7:0]   <= (gpio_wr[0]) ? gpio_data_i[7:0]   : gpio_o[7:0];
+            gpio_o[15:8]  <= (gpio_wr[1]) ? gpio_data_i[15:8]  : gpio_o[15:8];
+            gpio_o[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_o[23:16];
+            gpio_o[31:24] <= (gpio_wr[3]) ? gpio_data_i[31:24] : gpio_o[31:24];
         end
         else begin
-            gpio_o            <= gpio_o;
-            gpio_oe           <= gpio_oe;
-            gpio_ie           <= gpio_ie;
-            gpio_ep           <= gpio_ep;
+            gpio_o <= gpio_o;
+        end
+    end
+
+    //--------------------------------------------------------------------------
+    // Set data direction
+    // After reset: all ports to input state (avoid "accidents")
+    //--------------------------------------------------------------------------
+    always @(posedge clk) begin
+        if (rst) begin
+            gpio_dd <= 32'b0;
+        end
+        else if(enable_write & (address[`GPIO_ADDR_RANGE] == `GPIO_DD)) begin
+            gpio_dd[7:0]   <= (gpio_wr[0]) ? gpio_data_i[7:0]   : gpio_dd[7:0];
+            gpio_dd[15:8]  <= (gpio_wr[1]) ? gpio_data_i[15:8]  : gpio_dd[15:8];
+            gpio_dd[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_dd[23:16];
+            gpio_dd[31:24] <= (gpio_wr[3]) ? gpio_data_i[31:24] : gpio_dd[31:24];
+        end
+        else begin
+            gpio_dd <= gpio_dd;
+        end
+    end
+
+    //--------------------------------------------------------------------------
+    // Set interrupt enable
+    //--------------------------------------------------------------------------
+    always @(posedge clk) begin
+        if (rst) begin
+            gpio_ie <= 32'b0;
+        end
+        else if(enable_write & (address[`GPIO_ADDR_RANGE] == `GPIO_IE)) begin
+            gpio_ie[7:0]   <= (gpio_wr[0]) ? gpio_data_i[7:0]   : gpio_ie[7:0];
+            gpio_ie[15:8]  <= (gpio_wr[1]) ? gpio_data_i[15:8]  : gpio_ie[15:8];
+            gpio_ie[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_ie[23:16];
+            gpio_ie[31:24] <= (gpio_wr[3]) ? gpio_data_i[31:24] : gpio_ie[31:24];
+        end
+        else begin
+            gpio_ie <= gpio_ie;
+        end
+    end
+
+    //--------------------------------------------------------------------------
+    // Set edge mode
+    //--------------------------------------------------------------------------
+    always @(posedge clk) begin
+        if (rst) begin
+            gpio_ep <= 32'b0;
+        end
+        else if(enable_write & (address[`GPIO_ADDR_RANGE] == `GPIO_EP)) begin
+            gpio_ep[7:0]   <= (gpio_wr[0]) ? gpio_data_i[7:0]   : gpio_ep[7:0];
+            gpio_ep[15:8]  <= (gpio_wr[1]) ? gpio_data_i[15:8]  : gpio_ep[15:8];
+            gpio_ep[23:16] <= (gpio_wr[2]) ? gpio_data_i[23:16] : gpio_ep[23:16];
+            gpio_ep[31:24] <= (gpio_wr[3]) ? gpio_data_i[31:24] : gpio_ep[31:24];
+        end
+        else begin
+            gpio_ep <= gpio_ep;
+        end
+    end
+
+    //--------------------------------------------------------------------------
+    // Set interrupt signal
+    //--------------------------------------------------------------------------
+    always @(posedge clk) begin
+        if(rst) begin
+            gpio_interrupt <= 4'b0;
+        end
+        else if (enable_write & (address[`GPIO_ADDR_RANGE] == `GPIO_IC)) begin
+            gpio_interrupt[0] <= (gpio_wr[0]) ? 1'b0 : int_port_a | gpio_interrupt[0];
+            gpio_interrupt[1] <= (gpio_wr[1]) ? 1'b0 : int_port_b | gpio_interrupt[1];
+            gpio_interrupt[2] <= (gpio_wr[2]) ? 1'b0 : int_port_c | gpio_interrupt[2];
+            gpio_interrupt[3] <= (gpio_wr[3]) ? 1'b0 : int_port_d | gpio_interrupt[3];
+        end
+        else begin
             gpio_interrupt[0] <= int_port_a | gpio_interrupt[0];
             gpio_interrupt[1] <= int_port_b | gpio_interrupt[1];
             gpio_interrupt[2] <= int_port_c | gpio_interrupt[2];
@@ -171,19 +210,14 @@ module gpio(
     //--------------------------------------------------------------------------
     // read registers
     //--------------------------------------------------------------------------
-    always @(posedge clk) begin
-        if (rst) begin
-            gpio_data_o <= 32'b0;
-        end
-        else if (enable_read) begin
-            case(address[`GPIO_ADDR_RANGE])
-                `GPIO_PD : gpio_data_o <= gpio_data_reg_i;
-                `GPIO_DD : gpio_data_o <= gpio_oe;
-                `GPIO_IE : gpio_data_o <= gpio_ie;
-                `GPIO_EP : gpio_data_o <= gpio_ep;
-                `GPIO_IC : gpio_data_o <= 32'h0;
-                default  : gpio_data_o <= 32'hx;
-            endcase
-        end
+    always @(*) begin
+        case(address[`GPIO_ADDR_RANGE])
+            `GPIO_PD : gpio_data_o <= gpio_data_reg_i;
+            `GPIO_DD : gpio_data_o <= gpio_oe;
+            `GPIO_IE : gpio_data_o <= gpio_ie;
+            `GPIO_EP : gpio_data_o <= gpio_ep;
+            `GPIO_IC : gpio_data_o <= 32'h0;
+            default  : gpio_data_o <= 32'hx;
+        endcase
     end
 endmodule
