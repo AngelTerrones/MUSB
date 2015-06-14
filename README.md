@@ -17,12 +17,12 @@ for the eXtensible Utah Multicore (XUM) project at the University of Utah.
 -  Hardware multiplier (5-stages pipeline, disabled by default).
 -  Hardware is Little-Endian. No support for reverse-endian mode.
 -  Coprocessor 0 allows ISA-compliant interrupts, exceptions, and user/kernel modes.
--  No address space verification for the instruction port: Code runs always in kernel mode.
+-  No address space verification for the instruction port: code can be at any address.
 -  Documentation in-source.
 -  Vendor-independent code.
 
 The project includes the standalone MIPS32 processor and a basic SoC design with GPIO and UART/hardware bootloader.
-Tested in Xilinx Spartan-3 (Digilent) and Spartan-6 (XuLA2-LX25) boards.
+Tested in Xilinx Spartan-3 y Spartan-3e (Digilent) and Spartan-6 (XuLA2-LX25) boards.
 
 ## Peripherals (SoC)
 
@@ -51,30 +51,49 @@ This repository provides all you need to simulate and synthesize the processor:
 
 ```
 MUSB
+├── Boards/
+│   ├── xilinx_diligent_s3/  : SoC implementations for the Spartan-3 board.
+│   └── xilinx_diligent_s3e/ : SoC implementations for the Spartan-3e board.
 ├── Documentation/
-│   ├── src/                : Source files (texinfo).
+│   ├── src/                 : Source files (texinfo).
 │   └── makefile
 ├── Hardware/
-│   ├── core/               : Verilog files for the core.
-│   ├── include/            : Opcodes and processor configuration.
-│   ├── musoc/              : SoC implementation.
-│   ├── ram/                : Internal block RAM for synthesis and simulation.
+│   ├── arbiter/             : Bus arbiter: N-masters, 1 slave.
+│   ├── clk_generator/       : System clock generator (simulation).
+│   ├── fifo/                : FIFO module.
+│   ├── gpio/                : GPIO module: 4 8-bit I/O ports.
+│   ├── include/             : Core definitions.
+│   ├── io_cell/             : Tri-state buffer.
+│   ├── memory/              : BRAM memory (simulation).
+│   ├── musb/                : Core implementation.
+│   ├── musoc/               : SoC implementation (simulation).
+│   ├── mux_switch/          : Bus multiplexer: 1-master, N slaves.
+│   ├── ram/                 : Generic memory, for FIFO.
+│   ├── rst_generator/       : Reset generetor (debounce).
+│   ├── uart/                : UART + bootloader.
 │   └── README.md
 ├── Simulation/
-│   ├── inputs/             : Demos written in assembly.
-│   ├── run/                : Scripts to simulate the project using Icarus Verilog.
-│   ├── testbench/          : Verilog tests.
+│   ├── bench/               : Testbenchs for the core & SoC.
+│   ├── run/                 : Run scripts (makefile).
+│   ├── scripts/             : Scripts needed for the simulation makefile.
+│   ├── tests/               : Test folders: assembler & C
 │   └── README.md
 ├── Software/
-│   ├── Lib/                : Support libraries.
-│   └── Toolchain\          : MIPS cross-compile toolchain.
+│   ├── board/               : ??
+│   ├── c_project_loader/    :
+│   ├── drivers/             : Drivers for the generic SoC.
+│   ├── lib/                 : Support libraries for the SoC.
+│   ├── templates/           : Templates for project creation.
+│   ├── toolchain/           : Toolchain instructions.
+│   └── utils/               : Utilities for creating the binary image and HEX file for simulation.
 ├── MITlicense.md
+├── musb.todo
 └── README.md
 ```
 
 ## License
 
-Copyright (c) 2014 Angel Terrones (<aterrones@usb.ve>).
+Copyright (c) 2014, 2015 Angel Terrones (<aterrones@usb.ve>).
 
 Release under the [MIT License](MITlicense.md).
 

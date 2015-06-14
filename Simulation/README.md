@@ -6,20 +6,23 @@ Software needed to simulate the MUSB processor.
 
 ```
 Simulation
-├── inputs/                 : Demos.
-│   ├── asm/                : Assembler demos.
-│   └── mif/                : Compiled demos (Memory Input File).
-├── run/                    :
-│   ├── check_verilog.sh*   : Check syntax.
-│   ├── compile.sh*         : Compile testbench.
-│   ├── create_filelist.sh* : Create list of verilog input files.
-│   ├── help_screen.sh*     : Print help screen (make).
-│   ├── makefile            : makefile to run the testbenchs
-│   └── run_sim.sh*         : Execute compiled simulation.
-├── testbench/              :
-│   ├── components/         : Testbenchs for Core and SoC internals.
-│   ├── tb_core_uart.v      : Testbench for the SoC.
-│   └── tb_core.v           : Testbench for the Core.
+├── bench/
+│   └── verilog/
+│       ├── utils/           : Core/SoC monitors, and UART send/decode modules.
+│       ├── tb_core.v        : Testbench for Core only.
+│       └── tb_soc.v         : Testbench for SoC reference.
+├── run/                     :
+│   └── makefile             : Makefile
+├── scripts/                 :
+│   ├── check_verilog.sh*    : Check verilog syntax (only hardware/testbenchs).
+│   ├── compile_asm_test.sh* : Compile asm test.
+│   ├── compile_c_test.sh*   : Compile C project (test).
+│   ├── create_filelist.sh*  : Create list of verilog input files for testbench compilation.
+│   ├── help_screen.sh*      : Print help screen for makefile.
+│   └── rtlsim.sh*           : Compiles and executes the RTL simulation.
+├── tests/
+│   ├── asm/                 : Assembler demos.
+│   └── c/                   : C demos.
 └── README.md
 ```
 
@@ -37,43 +40,64 @@ To simulate the processor, follow the makefile instructions:
             make TARGET VARIABLE
 
 
-        TARGET:
+        TARGETS:
+            help
+                This help.
+
             check
-                Check Verilog files found in Hardware and Simulation/testbench directories;
+                Check Verilog files found in Hardware and Simulation/testbench folders;
 
-            compile
-                Compiles Verilog testbench found in Simulation/testbench directory;
-                places all outputs (waveforms, regdump, etc.) in Simulation/out folder
+            list_asm_tests
+                List all assembler files inside the Simulation/tests/asm/ folder;
 
-            run
-                Compiles Verilog testbench found in Simulation/testbench directory;
-                simulates Verilog using MIF as input (memory image);
-                places all outputs (waveforms, regdump, etc.) in Simulation/out folder
+            list_c_tests
+                List all C projects inside the Simulation/tests/c/ folder;
 
-            view
-                Open the vcd file VCD in Simulation/out folder with GTKWave
+            rtlsim
+                Simulates a single ASM test, and places all outputs (waveforms, regdump, logs)
+                in Simulation/out folder
 
+            rtlsim-c
+                Simulates a single C test, and places all outputs (waveforms, regdump, logs)
+                in Simulation/out folder
 
-        VARIABLE:
-            TB=VERILOG TESTBENCH
-                For compile and run targets, specifies the testbench file for simulation;
+            rtlsim-all
+                Simulates all ASM tests, and places all outputs (waveforms, regdump, logs)
+                in Simulation/out folder
 
-            MIF=MEMORY INPUT FILE
-                For run target, specifies the memory image: program and data;
+            clean
+                Clean temporary files inside the Simulation folder.
 
-            VCD=WAVEFORM FILE
-                For view target, specifies the waveform file to be opened with GTKWave;
+            distclean
+                Clean all temporary files.
 
+        VARIABLES:
+            TB=Verilog testbench.
+
+            TEST=ASM test.
+
+            MEM_SIZE=Memory size.
+
+            DSEG_SIZE=Size of Data Segment.
+
+            TIMEOUT=Simulation timeout.
+
+            DUMPVCD=Generate waveform file.
 
         EXAMPLES:
-            make check
-            make compile TB=../testbench/tb_core.v
-            make run TB=../testbench/tb_core.v MIF=../inputs/mif/addiu.mif
-            make view VCD=../out/tb_core.vcd
-
+                make
+                make help
+                make check
+                make list_asm_tests
+                make list_c_tests
+                make rtlsim TB=tb_core TEST=<asm-test> MEM_SIZE=4096 DSEG_SIZE=1024 TIMEOUT=100000 DUMPVCD=0
+                make rtlsim-c TB=tb_core TEST=<c-test> MEM_SIZE=4096 DSEG_SIZE=1024 TIMEOUT=100000 DUMPVCD=0
+                make rtlsim-all TB=tb_core MEM_SIZE=4096 DSEG_SIZE=1024 TIMEOUT=100000 DUMPVCD=0
+                make clean
+                make distclean
 
         (END)
         ```
 
-- Execute, from the __run__ folder: ```make run TB=../testbench/tb_core.v MIF=../inputs/MIF/addiu.mif```.
-  For each variable, the __user must specify the relative path__ to the input file.
+- Execute, from the __run__ folder: ```make rtlsim TB=tb_core TEST=<asm-test> MEM_SIZE=4096 DSEG_SIZE=1024 TIMEOUT=100000 DUMPVCD=0```.
+  For the __TB__ and __TEST__ variables, __do not include the file extension__.
