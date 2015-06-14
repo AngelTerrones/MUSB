@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : musb_hazard_unit.v
 //  Created On    : 2014-09-26 20:26:08
-//  Last Modified : 2015-06-08 12:02:56
+//  Last Modified : 2015-06-14 08:26:21
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -106,17 +106,17 @@ module musb_hazard_unit(
     assign ex_wb_rt_match       = (~ex_rt_is_zero) & (ex_rt == wb_gpr_wa)  & wb_gpr_we;         // Match registers
 
     assign stall_id_rs_mtc0        = id_ex_rt_match_mtc0;
-    assign stall_id_rs_rt_load_ex  = (id_ex_rs_match  | id_ex_rt_match)  & ex_mem_to_gpr  & id_branch;
+    assign stall_id_rs_rt_load_ex  = (id_ex_rs_match  | id_ex_rt_match)  & ex_mem_to_gpr;
     assign stall_id_rs_rt_branch   = (id_ex_rs_match  | id_ex_rt_match)  & id_branch;
     assign stall_id_rs_rt_load_mem = (id_mem_rs_match | id_mem_rt_match) & mem_mem_to_gpr;
     assign stall_ex_rs_rt_load_mem = (ex_mem_rs_match | ex_mem_rt_match) & mem_mem_to_gpr;
 
-    assign forward_mem_id_rs    = id_mem_rs_match & (~mem_mem_to_gpr);                          // No forward if instruction at MEM stage is a Load instruction
-    assign forward_mem_id_rt    = id_mem_rt_match & (~mem_mem_to_gpr);                          // No forward if instruction at MEM stage is a Load instruction
+    assign forward_mem_id_rs    = id_mem_rs_match & (~mem_mem_to_gpr);                          // No forward if instruction at MEM stage is a store instruction
+    assign forward_mem_id_rt    = id_mem_rt_match & (~mem_mem_to_gpr);                          // No forward if instruction at MEM stage is a store instruction
     assign forward_wb_id_rs     = id_wb_rs_match;
     assign forward_wb_id_rt     = id_wb_rt_match;
-    assign forward_mem_ex_rs    = ex_mem_rs_match & (~mem_mem_to_gpr);                          // No forward if instruction at MEM stage is a Load instruction
-    assign forward_mem_ex_rt    = ex_mem_rt_match & (~mem_mem_to_gpr);                          // No forward if instruction at MEM stage is a Load instruction
+    assign forward_mem_ex_rs    = ex_mem_rs_match & (~mem_mem_to_gpr);                          // No forward if instruction at MEM stage is a store instruction
+    assign forward_mem_ex_rt    = ex_mem_rt_match & (~mem_mem_to_gpr);                          // No forward if instruction at MEM stage is a store instruction
     assign forward_wb_ex_rs     = ex_wb_rs_match;
     assign forward_wb_ex_rt     = ex_wb_rt_match;
 
