@@ -62,8 +62,8 @@ class SerialObject(QObject):
             return
 
         try:
-            port = serial.Serial(self._portName, 115200, timeout=5,
-                                 writeTimeout=5)
+            port = serial.Serial(self._portName, 115200, timeout=3,
+                                 writeTimeout=3)
         except Exception as e:
             print(e)
             print("Unable to open serial port {}".format(self._portName))
@@ -72,7 +72,6 @@ class SerialObject(QObject):
             return
 
         isOpen = port.isOpen()
-        print(isOpen)
         if not isOpen:
             self.message.emit("ERROR:\tUnable to open serial port.\n")
             self.finished.emit()
@@ -89,8 +88,6 @@ class SerialObject(QObject):
             self.finished.emit()
             return
 
-        print("Executing boot protocol\n")
-
         # ----------------------------------------------------------------------
         # Info
         message = "INFO:\tBooting target.\n"
@@ -104,7 +101,6 @@ class SerialObject(QObject):
         # ----------------------------------------------------------------------
         # Get 'USB'
         dataRx = port.read(3)
-        print(dataRx)
         if(len(dataRx) < 3):
             port.close()
             self.message.emit("ERROR:\tTarget not detected.\n")
@@ -113,7 +109,6 @@ class SerialObject(QObject):
 
         self.message.emit("INFO:\tTarget detected.\n")
         if dataRx != b'USB':
-            print(dataRx)
             port.close()
             self.message.emit("ERROR:\tInvalid start token.\n")
             self.finished.emit()
@@ -134,7 +129,6 @@ class SerialObject(QObject):
         # Check echo size
         echoSize = port.read(3)
         if echoSize != binSizeWord[0:3]:
-            print(echoSize)
             port.close()
             self.message.emit("ERROR:\tWrong echo (size).\n")
             self.finished.emit()
@@ -150,14 +144,16 @@ class SerialObject(QObject):
             bytesTx = bytesTx + port.write(byteSend)
             byte = port.read(1)
             if byte != bytes([binData[counter]]):
-                message = "ERROR:\tError {}: {} != {}".format(counter, byte,
-                                                              byteSend)
-                print(message)
+                port.close()
+                message = "ERROR:\tError {}: {} != {}\n".format(counter, byte,
+                                                                byteSend)
                 self.message.emit(message)
+                self.message.emit("ERROR:\tBoot aborted, wrong echo.")
+                self.finished.emit()
+                return
             counter = counter + 1
 
         if bytesTx != binSize:
-            print(bytesTx, binSize)
             port.close()
             message = "ERROR:\tTruncated data. Unable to boot target.\n"
             self.message.emit(message)
