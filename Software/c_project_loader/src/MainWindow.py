@@ -15,6 +15,7 @@ import fileinput
 import re
 from PyQt5 import QtCore
 import serial.tools.list_ports as list_ports
+from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from PyQt5.QtGui import QIcon, QPixmap
 from Ui_MainWindow import Ui_MainWindow
@@ -37,9 +38,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._serialThread = QtCore.QThread()
         self._serialObject = SerialObject()
         self._booting = False
+        self._settings = None
         self._serialObject.moveToThread(self._serialThread)
         self._setupUi()
         self.loadSerialPorts()
+        self._loadSettings()
         self._connectSignalSlots()
 
     def closeEvent(self, event):
@@ -50,6 +53,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             title = "Exit program"
             message = "Aborting boot."
             QMessageBox.critical(self, title, message)
+
+        self._saveSettings()
 
     def _setupUi(self):
         """
@@ -79,6 +84,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._serialObject.message.connect(self.insertMessage)
         self._serialThread.started.connect(self._serialObject.bootTarget)
         self._serialThread.finished.connect(self.bootThreadFinished)
+
+    def _loadSettings(self):
+        self._settings = QSettings("Loader", "MUSB")
+        projectLocation = self._settings.value("ProjectPath")
+        self.lineEditProjectLocation.setText(projectLocation)
+        serialPort = self._settings.value("SerialPort")
+        self.comboBoxSerialPort.setCurrentText(serialPort)
+        binFile = self._settings.value("BinFile")
+        self.lineEditBinFile.setText(binFile)
+
+    def _saveSettings(self):
+        self._settings = QSettings("Loader", "MUSB")
+        self._settings.setValue("ProjectPath",
+                                self.lineEditProjectLocation.text())
+        self._settings.setValue("SerialPort",
+                                self.comboBoxSerialPort.currentText())
+        self._settings.setValue("BinFile", self.lineEditBinFile.text())
 
     def createProjectFolders(self, path):
         """
