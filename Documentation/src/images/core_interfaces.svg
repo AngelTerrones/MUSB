@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.1"
+   width="324.20978"
+   height="312.39536"
+   id="svg2">
+  <defs
+     id="defs4" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-223.35321,-217.85704)"
+     id="layer1">
+    <rect
+       width="323.48785"
+       height="311.73944"
+       x="223.67725"
+       y="218.18108"
+       id="rect3965"
+       style="fill:#00ffff;fill-opacity:1;stroke:#000000;stroke-width:0.64808106;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+    <g
+       id="g4355">
+      <g
+         transform="translate(4.6608539,-68.539858)"
+         id="g4329">
+        <rect
+           width="45.655617"
+           height="212.99135"
+           x="552.7406"
+           y="-487.35458"
+           transform="matrix(0,1,-1,0,0,0)"
+           id="rect3761-2-1"
+           style="fill:#5fd38d;fill-opacity:1;stroke:#000000;stroke-width:0.79208112;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+        <text
+           x="380.6853"
+           y="581.12842"
+           id="text3815-3"
+           xml:space="preserve"
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans Quotation;-inkscape-font-specification:Latin Modern Sans Quotation"><tspan
+             x="380.6853"
+             y="581.12842"
+             id="tspan4019">System Interface</tspan></text>
+      </g>
+      <text
+         x="385.04337"
+         y="243.69563"
+         id="text3755-15"
+         xml:space="preserve"
+         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans Quotation;-inkscape-font-specification:Latin Modern Sans Quotation"><tspan
+           x="385.04337"
+           y="243.69563"
+           id="tspan3759-1">MUSB</tspan></text>
+      <g
+         id="g4339">
+        <g
+           transform="translate(-17.237569,-3.2833465)"
+           id="g4334">
+          <rect
+             width="167.92712"
+             height="204.33148"
+             x="318.64749"
+             y="264.19467"
+             id="rect2985"
+             style="fill:#d35f5f;fill-opacity:1;stroke:#000000;stroke-width:0.65632588;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+          <text
+             x="402.81699"
+             y="373.09042"
+             id="text3755"
+             xml:space="preserve"
+             style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans Quotation;-inkscape-font-specification:Latin Modern Sans Quotation"><tspan
+               x="402.81699"
+               y="373.09042"
+               id="tspan3759">CPU</tspan></text>
+        </g>
+        <rect
+           width="29.767046"
+           height="9.4079199"
+           x="271.37689"
+           y="358.37311"
+           id="rect3870"
+           style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.23295492;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+        <rect
+           width="29.767046"
+           height="9.4079199"
+           x="468.72726"
+           y="358.37311"
+           id="rect3870-6"
+           style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.23295492;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+        <g
+           transform="translate(334.80979,-0.18237909)"
+           id="g4319">
+          <rect
+             width="48.145229"
+             height="188.39334"
+             x="164.22546"
+             y="269.06277"
+             id="rect3761-2-3"
+             style="fill:#5fd38d;fill-opacity:1;stroke:#000000;stroke-width:0.76498157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+          <text
+             x="-364.02774"
+             y="195.09808"
+             transform="matrix(0,-1,1,0,0,0)"
+             id="text3755-1"
+             xml:space="preserve"
+             style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans Quotation;-inkscape-font-specification:Latin Modern Sans Quotation"><tspan
+               x="-364.02774"
+               y="195.09808"
+               id="tspan3811">Instruction Port</tspan></text>
+        </g>
+        <g
+           transform="translate(-350.86819,37.348047)"
+           id="g4324">
+          <rect
+             width="48.145229"
+             height="188.39334"
+             x="574.72723"
+             y="231.53235"
+             id="rect3761-2"
+             style="fill:#5fd38d;fill-opacity:1;stroke:#000000;stroke-width:0.76498157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+          <text
+             x="-326.50729"
+             y="605.53986"
+             transform="matrix(0,-1,1,0,0,0)"
+             id="text3815"
+             xml:space="preserve"
+             style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans Quotation;-inkscape-font-specification:Latin Modern Sans Quotation"><tspan
+               x="-326.50729"
+               y="605.53986"
+               id="tspan3817">Data Port</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

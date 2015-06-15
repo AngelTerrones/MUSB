@@ -1,0 +1,227 @@
+@c ****************************************************************************
+@c MUSoC: MUSB System on Chip
+@c ****************************************************************************
+@node MUSoC - MUSB System on Chip
+@chapter MUSoC: MUSB System on Chip
+@cindex MUSoC: MUSB System on Chip
+@anchor{#musoc}
+
+This chapter describes the MUSoC: a basic SoC implementation using the MUSB core.
+
+The MUSoC consist of:
+
+@itemize @bullet
+    @item The MUSB core.
+    @item Internal memory.
+    @item Bus Arbiter.
+    @item Bus Mux.
+    @item GPIO.
+    @item UART & Bootloader.
+    @item Clock & Reset Generator.
+@end itemize
+
+@center @image{images/musoc,,235pt,MUSoC, pdf}
+
+@c ----------------------------------
+@section Internal Memory
+
+The internal memory in the MUSoC is implemented using BRAM. The size of this memory is configurable and depends on the available BRAM in the target FPGA. For simulation purposes, the limit is 4GB.
+
+@c ----------------------------------
+@section Bus Arbiter
+
+This module arbitrates the access to the bus using a priority scheme, granting access to the master with the highest number, and keeping the selected master until the transaction is over. This version do not use registers, so there is no delay accessing the bus.
+
+Parameters for this module:
+@table @code
+    @item nmasters
+        Number of masters.
+@end table
+
+The pinout of this module:
+@multitable @columnfractions .2 .2 .2 .4
+    @headitem Port @tab Width @tab Direction @tab Description
+    @item @code{master_address} @tab 32*@code{nmasters} @tab Input     @tab Requested slave address.
+    @item @code{master_data_i}  @tab 32*@code{nmasters} @tab Input     @tab Data from master
+    @item @code{master_wr}      @tab 4*@code{nmasters}  @tab Input     @tab Byte selectors
+    @item @code{master_enable}  @tab @code{nmasters}    @tab Input     @tab Enable operation
+    @item @code{master_data_o}  @tab 32                 @tab Output    @tab Data to master
+    @item @code{master_ready}   @tab @code{nmasters}    @tab Output    @tab Ready signal from slave
+    @item @code{master_error}   @tab @code{nmasters}    @tab Output    @tab Bus/Slave error
+    @item @code{slave_data_i}   @tab 32                 @tab Input     @tab Data from slave
+    @item @code{slave_ready}    @tab 1                  @tab Input     @tab Ready signal from slave
+    @item @code{slave_error}    @tab 1                  @tab Input     @tab Bus/Error signal
+    @item @code{slave_address}  @tab 32                 @tab Output    @tab Slave address
+    @item @code{slave_data_o}   @tab 32                 @tab Output    @tab Data to slave
+    @item @code{slave_wr}       @tab 4                  @tab Output    @tab Byte selector
+    @item @code{slave_enable}   @tab 1                  @tab Output    @tab Enable operation
+@end multitable
+
+This module is based on the Wishbone arbiter module from the ORPSOC-CORE project. Author: @email{olof@@opencores.org, Olof Kindgren}
+
+@c ----------------------------------
+@section Bus Mux
+
+This unit multiplexes the access to the slaves. The module generates a bus error if the requested address is invalid (not mapped), if the module's watchdog generates a timeout signal, or if the peripheral generates an error.
+
+Parameters for this module:
+@table @code
+    @item nslaves
+        Number of slaves.
+    @item MATCH_ADDR
+        List of 32-bit initial addresses for each peripheral. @strong{Warning: do not overlap memory regions}
+    @item MATCH_MASK
+        List of 32-bit mask used to verify if the address given match with the initial address of, at least, one slave.
+@end table
+
+The pinout of this module:
+@multitable @columnfractions .2 .2 .2 .4
+    @headitem Port @tab Width @tab Direction @tab Description
+    @item @code{master_address} @tab  32  @tab Input     @tab Requested slave address.
+    @item @code{master_data_i}  @tab  32  @tab Input     @tab Data from master
+    @item @code{master_wr}      @tab  4  @tab Input      @tab Byte selectors
+    @item @code{master_enable}  @tab  1  @tab Input      @tab Enable operation
+    @item @code{master_data_o}  @tab  32  @tab Output    @tab Data to master
+    @item @code{master_ready}   @tab  1  @tab Output     @tab Ready signal from slave
+    @item @code{master_error}   @tab  1  @tab Output     @tab Bus/Slave error
+    @item @code{slave_data_i}   @tab  32*@code{nmasters} @tab Input     @tab Data from slave
+    @item @code{slave_ready}    @tab  @code{nmasters}    @tab Input     @tab Ready signal from slave
+    @c @item @code{slave_error}    @tab 32               @tab Input     @tab Bus/Error signal
+    @item @code{slave_address}  @tab 32                  @tab Output    @tab Slave address
+    @item @code{slave_data_o}   @tab 32                  @tab Output    @tab Data to slave
+    @item @code{slave_wr}       @tab 4                   @tab Output    @tab Byte selector
+    @item @code{slave_enable}   @tab @code{nmasters}     @tab Output    @tab Enable operation
+@end multitable
+
+This module is based on the Wishbone multiplexer module from the ORPSOC-CORE project. Author: @email{olof@@opencores.org, Olof Kindgren}
+
+@c ----------------------------------
+@section General-Purpose I/O (GPIO)
+
+A user-programmable general-purpose I/O controller. This module does not have the tri-state buffers needed for a complete GPIO.
+
+This module has the following configuration registers, for each GPIO port:
+@itemize @bullet
+    @item @code{PD}: Port Data.
+    @item @code{DD}: Data Direction.
+    @item @code{IE}: Interrupt Enable (pin).
+    @item @code{EP}: Edge polarity: 0 = Falling. 1 = Rising.
+    @item @code{IC}: Clear interrupt flag.
+@end itemize
+
+The configuration registers are mapped to the following addresses, with @code{BASE_ADDRESS} the initial address configured in the Bus Mux module:
+
+@itemize @bullet
+    @item @code{PTAD}  = @code{BASE_ADDRESS} + 0x00
+    @item @code{PTBD}  = @code{BASE_ADDRESS} + 0x01
+    @item @code{PTCD}  = @code{BASE_ADDRESS} + 0x02
+    @item @code{PTDD}  = @code{BASE_ADDRESS} + 0x03
+    @item @code{PTADD} = @code{BASE_ADDRESS} + 0x04
+    @item @code{PTBDD} = @code{BASE_ADDRESS} + 0x05
+    @item @code{PTCDD} = @code{BASE_ADDRESS} + 0x06
+    @item @code{PTDDD} = @code{BASE_ADDRESS} + 0x07
+    @item @code{PTAIE} = @code{BASE_ADDRESS} + 0x08
+    @item @code{PTBIE} = @code{BASE_ADDRESS} + 0x09
+    @item @code{PTCIE} = @code{BASE_ADDRESS} + 0x0A
+    @item @code{PTDIE} = @code{BASE_ADDRESS} + 0x0B
+    @item @code{PTAEP} = @code{BASE_ADDRESS} + 0x0C
+    @item @code{PTBEP} = @code{BASE_ADDRESS} + 0x0D
+    @item @code{PTCEP} = @code{BASE_ADDRESS} + 0x0E
+    @item @code{PTDEP} = @code{BASE_ADDRESS} + 0x0F
+    @item @code{PTAIC} = @code{BASE_ADDRESS} + 0x10
+    @item @code{PTBIC} = @code{BASE_ADDRESS} + 0x11
+    @item @code{PTCIC} = @code{BASE_ADDRESS} + 0x12
+    @item @code{PTDIC} = @code{BASE_ADDRESS} + 0x13
+@end itemize
+
+The pinout of this module:
+@multitable @columnfractions .2 .2 .2 .4
+    @headitem Port @tab Width @tab Direction @tab Description
+    @item @code{clk}            @tab 1  @tab Input   @tab Module's clock
+    @item @code{rst}            @tab 1  @tab Input   @tab System reset
+    @item @code{gpio_i}         @tab 32 @tab Input   @tab Input port
+    @item @code{gpio_address}   @tab 5  @tab Input   @tab Requested register address
+    @item @code{gpio_data_i}    @tab 32 @tab Input   @tab Data from master/bus
+    @item @code{gpio_wr}        @tab 4  @tab Input   @tab Byte select
+    @item @code{gpio_enable}    @tab 1  @tab Input   @tab Enable operation
+    @item @code{gpio_o}         @tab 32 @tab Input   @tab Output port
+    @item @code{gpio_oe}        @tab 32 @tab Input   @tab Output enable
+    @item @code{gpio_data_o}    @tab 32 @tab Output  @tab Data to master/bus
+    @item @code{gpio_ready}     @tab 1  @tab Output  @tab Acknowledge operation
+    @item @code{gpio_interrupt} @tab 4  @tab Output  @tab Interrupt detected: 1 bit for each 8-bit port
+@end multitable
+
+@c ----------------------------------
+@section UART & Bootloader.
+
+This module is an RS232 compatile UART with bootloader functionality. The UART configuration is fixed (115200 bauds, 8N1).
+
+The boot protocol is over a COM (serial) port, 115200 bauds, 8N1, no parity:
+@enumerate
+    @item At reset, the target/UART-bootloader sends "USB". The Master Reset is asserted by this module.
+    @item The programmer/uploader sends the size, in words, of the bin file, minus 1., with timeout of 1 second.
+          After 1 second, it will release the Master Reset, and enter Slave Mode.
+          This size is 18-bits (3 bytes). The size is sent from low-order to high-order bytes (Little-Endian).
+    @item The target echoes the 3 bytes received, to confirm that the bootloader is listening.
+    @item The programmer/uploader sends the bin file (data). The target will echo each byte to confirm
+          proper functioning.
+    @item The target boots from memory when the last byteis received.
+@end enumerate
+
+Parameters for this module:
+@table @code
+    @item SIM_MODE
+        Simulation Mode. "SIM" = simulation. "NONE" = synthesis.
+    @item BUS_FREQ
+        Module's clock frequency (same as Bus frequency).
+@end table
+
+Tx and Rx use independent FIFO buffers (Default implementation: 1024 bytes each one)
+
+The configuration registers are mapped to the following addresses, with @code{BASE_ADDRESS} the initial address configured in the Bus Mux module:
+
+@itemize @bullet
+    @item @code{Rx buffer} = @code{BASE_ADDRESS} + 0x00
+    @item @code{Tx buffer} = @code{BASE_ADDRESS} + 0x00
+    @item @code{Tx count}  = @code{BASE_ADDRESS} + 0x01 (2 bytes, maximum)
+    @item @code{Rx count}  = @code{BASE_ADDRESS} + 0x03 (2 bytes, maximum)
+@end itemize
+
+The pinout of this module:
+@multitable @columnfractions .2 .2 .2 .4
+    @headitem Port @tab Width @tab Direction @tab Description
+    @item @code{clk}                   @tab 1  @tab input   @tab   Module's clock
+    @item @code{rst}                   @tab 1  @tab input   @tab   System reset
+    @item @code{uart_address}          @tab 3  @tab input   @tab   Address
+    @item @code{uart_data_i}           @tab 8  @tab input   @tab   Data from bus
+    @item @code{uart_wr}               @tab 1  @tab input   @tab   Byte select
+    @item @code{uart_enable}           @tab 1  @tab input   @tab   Enable operation
+    @item @code{uart_data_o}           @tab 32 @tab output  @tab   Data to bus
+    @item @code{uart_ready}            @tab 1  @tab output  @tab   Ready operation
+    @item @code{boot_master_data_i}    @tab 32 @tab input   @tab   Data from memory
+    @item @code{boot_master_ready}     @tab 1  @tab input   @tab   Memory is ready
+    @item @code{boot_master_address}   @tab 32 @tab output  @tab   Data address
+    @item @code{boot_master_data_o}    @tab 32 @tab output  @tab   Data to memory
+    @item @code{boot_master_wr}        @tab 14 @tab output  @tab   Write operation = byte select. Read operation = 0000,
+    @item @code{boot_master_enable}    @tab 1  @tab output  @tab   Enable operation
+    @item @code{uart_rx_ready_int}     @tab 1  @tab output  @tab   Data available
+    @item @code{uart_rx_full_int}      @tab 1  @tab output  @tab   Rx Buffer full
+    @item @code{bootloader_reset_core} @tab 1  @tab output  @tab   In bootloader mode, reset core
+    @item @code{uart_rx}               @tab 1  @tab input   @tab   Rx pin
+    @item @code{uart_tx}               @tab 1  @tab output  @tab   Tx end
+@end multitable
+
+Based on the UART Bootloader module from the XUM project. Author @email{ayers@@cs.utah.edu, Grant Ayers}.
+
+@c ----------------------------------
+@section Reset & Clock Generator
+
+These modules generate the main reset and clock signals.
+
+The reset generator debounce the asynchronous reset usint a 11-bit counter.
+
+The clock module generates two system clocks:
+@itemize @bullet
+    @item Bus and peripherals.
+    @item Core. This clock is equal to Bus clock divided by 2.
+@end itemize
