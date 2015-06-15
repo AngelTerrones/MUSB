@@ -46,7 +46,7 @@ ln -s ../../rtl/verilog/include/musb_defines.v
 #-------------------------------------------------------------------------------
 # Execute XFLOW
 #-------------------------------------------------------------------------------
-xflow -p $1 -implement high_effort.opt         \
+xflow -p $1 -implement ../scripts/high_effort.opt \
             -config ../scripts/bitgen.opt      \
             -synth ../scripts/xst_verilog.opt  \
             ./musoc.prj

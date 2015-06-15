@@ -1,0 +1,48 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// Processor 'MUSB', ID 0, memory map.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+ADDRESS_MAP MUSB PPC405 0
+
+    ///////////////////////////////////////////////////////////////////////////////
+    //
+    // Processor 'MUSB' address space 'ram_code' 0x00000000:0x00003FFF (16 KB).
+    //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    ADDRESS_SPACE ram_code COMBINED [0x00000000:0x00003FFF]
+
+        ///////////////////////////////////////////////////////////////////////////////
+        //
+        // Address range 0x00000000:0x00001FFF (8 KB).
+        //
+        ///////////////////////////////////////////////////////////////////////////////
+
+        ADDRESS_RANGE RAMB16
+            BUS_BLOCK
+                memory0/bank0/Mram_mem1 [7:0]   ;
+                memory0/bank1/Mram_mem1 [15:8]  ;
+                memory0/bank2/Mram_mem1 [23:16] ;
+                memory0/bank3/Mram_mem1 [31:24] ;
+            END_BUS_BLOCK;
+        END_ADDRESS_RANGE;
+
+
+        ///////////////////////////////////////////////////////////////////////////////
+        //
+        // Address range 0x00002000:0x00003FFF (8 KB).
+        //
+        ///////////////////////////////////////////////////////////////////////////////
+
+        ADDRESS_RANGE RAMB16
+            BUS_BLOCK
+                memory0/bank0/Mram_mem2 [7:0]   ;
+                memory0/bank1/Mram_mem2 [15:8]  ;
+                memory0/bank2/Mram_mem2 [23:16] ;
+                memory0/bank3/Mram_mem2 [31:24] ;
+            END_BUS_BLOCK;
+        END_ADDRESS_RANGE;
+    END_ADDRESS_SPACE;
+END_ADDRESS_MAP;
