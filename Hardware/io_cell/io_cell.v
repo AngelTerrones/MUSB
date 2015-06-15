@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : io_cell.v
 //  Created On    : 2015-06-07 21:51:13
-//  Last Modified : 2015-06-07 22:39:02
+//  Last Modified : 2015-06-15 15:07:57
 //  Revision      : 1.0
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -25,5 +25,10 @@ module io_cell #(
     // Asignments
     //--------------------------------------------------------------------------
     assign data_i = io_pad;
-    assign io_pad = (oe) ? data_o : {WIDTH{1'bz}};
+    generate
+        genvar i;
+        for(i = 0; i < WIDTH; i = i + 1) begin: buffer
+            assign io_pad[i] = (oe[i]) ? data_o[i] : 1'bz;            // If output: put data. Else, High-Z
+        end
+    endgenerate
 endmodule
