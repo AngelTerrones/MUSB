@@ -1,5 +1,7 @@
 ![logo](https://github.com/AngelTerrones/MUSB/wiki/images/logo_musb.png)
 
+__(Currently, this project is not under development. The new MIPS processor (core only): https://github.com/AngelTerrones/antares)__
+
 Implementation of the MIPS32 release 1 processor.
 
 Based on the [XUM project](https://github.com/grantea/mips32r1_xum) created by Grant Ayers
